@@ -2,3 +2,7 @@
 hostname=
 username=
 password=
+[newsdedup]
+maxcount=1000
+ratio=60
+sleep=10
