@@ -6,3 +6,4 @@ password=
 maxcount=1000
 ratio=60
 sleep=10
+ignore=1,2,3
