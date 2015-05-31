@@ -139,4 +139,10 @@ if __name__ == '__main__':
     queue = init_queue(configuration)
     ignore_list = init_ignore_list(configuration)
     learn_last_read(rss, queue, args, configuration)
-    monitor_rss(rss, queue, ignore_list, args, configuration)
+    while True:
+        try:
+            monitor_rss(rss, queue, ignore_list, args, configuration)
+        except KeyboardInterrupt:
+            sys.exit(1)
+        except:
+            time.sleep(30)
