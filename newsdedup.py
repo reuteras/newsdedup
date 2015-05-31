@@ -54,7 +54,6 @@ def learn_last_read(rss, queue, args, configuration):
         try:
             min_id = headlines[0].id
         except:
-            print "error unread"
             return queue
         for article in headlines:
             if article.id < min_id:
@@ -66,7 +65,6 @@ def learn_last_read(rss, queue, args, configuration):
         try:
             max_id = headlines[0].id
         except:
-            print "error read"
             return queue
         for article in headlines:
             if article.id > max_id:
@@ -74,8 +72,6 @@ def learn_last_read(rss, queue, args, configuration):
         min_id = max_id - maxlearn
     learned = 0
     start_id = min_id
-    if args.debug:
-            print "min_id: ", min_id
     while learned < maxlearn:
         headlines = feeds[1].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = maxlearn)
         for article in headlines:
@@ -107,14 +103,14 @@ def monitor_rss(rss, queue, args, configuration):
             if head.id > max_id:
                 max_id = head.id + 1
             if args.verbose:
-                current_time=strftime("%Y-%m-%d %H:%M:%S", gmtime())
-                print current_time, ": ", head.title
+                current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
+                print current_time, head.title
             if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
                 handle_known_news(rss, head)
             queue.append(head.title)
         if args.debug:
-            current_time=strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            print current_time, ": Sleeping."
+            current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
+            print current_time, "Sleeping."
         time.sleep(sleeptime)
 
 if __name__ == '__main__':
