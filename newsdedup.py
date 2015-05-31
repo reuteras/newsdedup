@@ -31,7 +31,11 @@ def init_ttrss(configuration):
 def init_queue(configuration):
     maxcount = int(configuration.get('newsdedup', 'maxcount'))
     return deque(maxlen = maxcount)
-    
+
+def init_ignore_list(configuration):
+    ignorestring = configuration.get('newsdedup', 'ignore')
+    return ignorestring.split(',')
+
 def compare_to_queue(queue, title, ratio, verbose):
     for item in queue:
         if fuzz.token_sort_ratio(item, title) > ratio:
@@ -42,9 +46,11 @@ def compare_to_queue(queue, title, ratio, verbose):
             return fuzz.token_sort_ratio(item, title)
     return 0
 
-def handle_known_news(rss, head):
-    rss.update_article(head.id, 1, 0)
-    rss.mark_read(head.id)
+def handle_known_news(rss, head, ignore_list):
+    if not head.feed_id in ignore_list:
+        if not head.is_updated:
+            rss.update_article(head.id, 1, 0)
+            rss.mark_read(head.id)
 
 def learn_last_read(rss, queue, args, configuration):
     maxlearn = int(configuration.get('newsdedup', 'maxcount'))
@@ -82,7 +88,7 @@ def learn_last_read(rss, queue, args, configuration):
         print "Learned titles from", learned, "RSS articles."
     return queue                
 
-def monitor_rss(rss, queue, args, configuration):
+def monitor_rss(rss, queue, ignore_list, args, configuration):
     max_id = 0
     ratio = int(configuration.get('newsdedup', 'ratio'))
     sleeptime = int(configuration.get('newsdedup', 'sleep'))
@@ -106,7 +112,7 @@ def monitor_rss(rss, queue, args, configuration):
                 current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
                 print current_time, head.title
             if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
-                handle_known_news(rss, head)
+                handle_known_news(rss, head, ignore_list)
             queue.append(head.title)
         if args.debug:
             current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
@@ -129,5 +135,6 @@ if __name__ == '__main__':
     configuration = read_configuration(args.configFile)
     rss = init_ttrss(configuration)
     queue = init_queue(configuration)
+    ignore_list = init_ignore_list(configuration)
     learn_last_read(rss, queue, args, configuration)
-    monitor_rss(rss, queue, args, configuration)
+    monitor_rss(rss, queue, ignore_list, args, configuration)
