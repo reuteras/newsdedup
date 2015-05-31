@@ -46,26 +46,72 @@ def handle_known_news(rss, head):
     rss.update_article(head.id, 1, 0)
     rss.mark_read(head.id)
 
+def learn_last_read(rss, queue, args, configuration):
+    maxlearn = int(configuration.get('newsdedup', 'maxcount'))
+    if rss.get_unread_count() > 0:
+        feeds = rss.get_feeds(unread_only = True)
+        headlines = feeds[1].headlines(view_mode='unread')
+        try:
+            min_id = headlines[0].id
+        except:
+            print "error unread"
+            return queue
+        for article in headlines:
+            if article.id < min_id:
+                min_id = article.id
+        min_id -= maxlearn
+    else:
+        feeds = rss.get_feeds()
+        headlines = feeds[3].headlines(view_mode = 'all_articles', limit=maxlearn)
+        try:
+            max_id = headlines[0].id
+        except:
+            print "error read"
+            return queue
+        for article in headlines:
+            if article.id > max_id:
+                max_id = article.id
+        min_id = max_id - maxlearn
+    learned = 0
+    start_id = min_id
+    if args.debug:
+            print "min_id: ", min_id
+    while learned < maxlearn:
+        headlines = feeds[3].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = maxlearn)
+        for article in headlines:
+            if not article.unread:
+                queue.append(article.title)
+                learned += 1
+    if args.verbose:
+        print "Learned titles from", learned, "RSS articles."
+    return queue                
+
 def monitor_rss(rss, queue, args, configuration):
     max_id = 0
     ratio = int(configuration.get('newsdedup', 'ratio'))
     sleeptime = int(configuration.get('newsdedup', 'sleep'))
+    headlines = []
     while True:
-        if rss.get_unread_count() > 0:
-            feeds = rss.get_feeds(unread_only = True)
-            if max_id == 0:
+        feeds = rss.get_feeds(unread_only = True)
+        if max_id == 0:
+            try:
                 headlines = feeds[1].headlines(view_mode='unread')
-            else:
+            except:
+                pass
+        else:
+            try:
                 headlines = feeds[1].headlines(since_id = max_id, view_mode='unread')
-            for head in headlines:
-                if head.id > max_id:
-                    max_id = head.id + 1
-                if args.verbose:
-                    current_time=strftime("%Y-%m-%d %H:%M:%S", gmtime())
-                    print current_time, ": ", head.title
-                if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
-                    handle_known_news(rss, head)
-                queue.append(head.title)
+            except:
+                pass
+        for head in headlines:
+            if head.id > max_id:
+                max_id = head.id + 1
+            if args.verbose:
+                current_time=strftime("%Y-%m-%d %H:%M:%S", gmtime())
+                print current_time, ": ", head.title
+            if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
+                handle_known_news(rss, head)
+            queue.append(head.title)
         if args.debug:
             current_time=strftime("%Y-%m-%d %H:%M:%S", gmtime())
             print current_time, ": Sleeping."
@@ -87,4 +133,5 @@ if __name__ == '__main__':
     configuration = read_configuration(args.configFile)
     rss = init_ttrss(configuration)
     queue = init_queue(configuration)
+    learn_last_read(rss, queue, args, configuration)
     monitor_rss(rss, queue, args, configuration)
