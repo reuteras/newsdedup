@@ -48,9 +48,8 @@ def compare_to_queue(queue, title, ratio, verbose):
 
 def handle_known_news(rss, head, ignore_list):
     if not head.feed_id in ignore_list:
-        if not head.is_updated:
-            rss.update_article(head.id, 1, 0)
-            rss.mark_read(head.id)
+        rss.update_article(head.id, 1, 0)
+        rss.mark_read(head.id)
 
 def learn_last_read(rss, queue, args, configuration):
     maxlearn = int(configuration.get('newsdedup', 'maxcount'))
@@ -64,7 +63,7 @@ def learn_last_read(rss, queue, args, configuration):
         for article in headlines:
             if article.id < min_id:
                 min_id = article.id
-        min_id -= maxlearn
+        min_id -= maxlearn + 1
         index = 1
     else:
         feeds = rss.get_feeds()
@@ -90,6 +89,7 @@ def learn_last_read(rss, queue, args, configuration):
         print "Learned titles from", learned, "RSS articles."
     return queue                
 
+# Main function to check new rss posts.
 def monitor_rss(rss, queue, ignore_list, args, configuration):
     max_id = 0
     ratio = int(configuration.get('newsdedup', 'ratio'))
@@ -113,9 +113,10 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
             if args.verbose:
                 current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
                 print current_time, head.title
-            if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
-                handle_known_news(rss, head, ignore_list)
-            queue.append(head.title)
+            if not head.is_updated:
+                if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
+                    handle_known_news(rss, head, ignore_list)
+                queue.append(head.title)
         if args.debug:
             current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
             print current_time, "Sleeping."
@@ -145,4 +146,5 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             sys.exit(1)
         except:
+            print "Connection lost. Sleeping for 30 seconds."
             time.sleep(30)
