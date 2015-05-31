@@ -59,10 +59,10 @@ def learn_last_read(rss, queue, args, configuration):
         for article in headlines:
             if article.id < min_id:
                 min_id = article.id
-        min_id -= maxlearn
+        min_id -= maxlearn + 1
     else:
         feeds = rss.get_feeds()
-        headlines = feeds[3].headlines(view_mode = 'all_articles', limit=maxlearn)
+        headlines = feeds[1].headlines(view_mode = 'all_articles', limit=maxlearn)
         try:
             max_id = headlines[0].id
         except:
@@ -77,7 +77,7 @@ def learn_last_read(rss, queue, args, configuration):
     if args.debug:
             print "min_id: ", min_id
     while learned < maxlearn:
-        headlines = feeds[3].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = maxlearn)
+        headlines = feeds[1].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = maxlearn)
         for article in headlines:
             if not article.unread:
                 queue.append(article.title)
