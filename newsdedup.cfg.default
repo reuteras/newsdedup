@@ -1,7 +1,7 @@
 [ttrss]
-hostname=
-username=
-password=
+hostname=https://server.name.tld/path
+username=username
+password=SecretP@ssW0rd!
 [newsdedup]
 maxcount=1000
 ratio=60
