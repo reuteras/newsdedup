@@ -47,7 +47,6 @@ def compare_to_queue(queue, title, ratio, verbose):
     return 0
 
 def handle_known_news(rss, head, ignore_list):
-    if not head.feed_id in ignore_list:
         rss.update_article(head.id, 1, 0)
         rss.mark_read(head.id)
 
@@ -113,7 +112,7 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
             if args.verbose:
                 current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
                 print current_time, head.title
-            if not head.is_updated:
+            if (not head.is_updated) and (not head.feed_id in ignore_list):
                 if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
                     handle_known_news(rss, head, ignore_list)
                 queue.append(head.title)
