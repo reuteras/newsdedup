@@ -108,7 +108,7 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
                 pass
         for head in headlines:
             if head.id > max_id:
-                max_id = head.id + 1
+                max_id = head.id
             if args.verbose:
                 current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
                 print current_time, head.title
@@ -124,10 +124,10 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='newsdedup',
-        description='''This programs is my first try in trying to "dedup" my RSS feeds. 
+        description='''This programs tries to dedup RSS articles handled by Tiny tiny RSS.
             
             Default configuration file is newsdedup.cfg in the current directory.''',
-         epilog='''Program made by Peter Reuterås, @reuteras. If you find a 
+         epilog='''Program made by Peter Reuterås, @reuteras on Twitter. If you find a 
             bug please let me know.''')
     parser.add_argument('configFile', metavar='newsdedup.cfg', default='newsdedup.cfg', nargs='?', help='Specify configuration file.')
     parser.add_argument('-v', '--verbose', action="store_true", help='Verbose output.')
