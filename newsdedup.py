@@ -28,7 +28,7 @@ def init_ttrss(configuration):
     password = configuration.get('ttrss', 'password')
     return TTRClient(hostname, username, password, auto_login=True)
 
-def init_queue(configuration):
+def init_title_queue(configuration):
     maxcount = int(configuration.get('newsdedup', 'maxcount'))
     return deque(maxlen = maxcount)
 
@@ -36,7 +36,7 @@ def init_ignore_list(configuration):
     ignorestring = configuration.get('newsdedup', 'ignore')
     return ignorestring.split(',')
 
-def compare_to_queue(queue, title, ratio, verbose):
+def compare_title_to_queue(queue, title, ratio, verbose):
     for item in queue:
         if fuzz.token_sort_ratio(item, title) > ratio:
             if verbose:
@@ -79,7 +79,8 @@ def learn_last_read(rss, queue, args, configuration):
     learned = 0
     start_id = min_id
     while learned < maxlearn:
-        headlines = feeds[index].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = maxlearn)
+        limit = 200 if maxlearn > 200 else maxlearn
+        headlines = feeds[index].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = limit)
         for article in headlines:
             if not article.unread:
                 queue.append(article.title)
@@ -113,7 +114,7 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
                 current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
                 print current_time, head.title
             if (not head.is_updated) and (not head.feed_id in ignore_list):
-                if compare_to_queue(queue, head.title, ratio, args.verbose) > 0:
+                if compare_title_to_queue(queue, head.title, ratio, args.verbose) > 0:
                     handle_known_news(rss, head, ignore_list)
                 queue.append(head.title)
         if args.debug:
@@ -136,7 +137,7 @@ if __name__ == '__main__':
 
     configuration = read_configuration(args.configFile)
     rss = init_ttrss(configuration)
-    queue = init_queue(configuration)
+    queue = init_title_queue(configuration)
     ignore_list = init_ignore_list(configuration)
     learn_last_read(rss, queue, args, configuration)
     while True:
