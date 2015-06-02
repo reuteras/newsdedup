@@ -52,35 +52,13 @@ def handle_known_news(rss, head, ignore_list):
 
 def learn_last_read(rss, queue, args, configuration):
     maxlearn = int(configuration.get('newsdedup', 'maxcount'))
-    if rss.get_unread_count() > 0:
-        feeds = rss.get_feeds(unread_only = True)
-        headlines = feeds[1].headlines(view_mode='unread')
-        try:
-            min_id = headlines[0].id
-        except:
-            return queue
-        for article in headlines:
-            if article.id < min_id:
-                min_id = article.id
-        min_id -= maxlearn + 1
-        index = 1
-    else:
-        feeds = rss.get_feeds()
-        headlines = feeds[3].headlines(view_mode = 'all_articles', limit=maxlearn)
-        try:
-            max_id = headlines[0].id
-        except:
-            return queue
-        for article in headlines:
-            if article.id > max_id:
-                max_id = article.id
-        min_id = max_id - maxlearn
-        index = 3
+    feeds = rss.get_feeds()
+    headlines = feeds[3].headlines(view_mode = 'all_articles', limit=1)
+    start_id = headlines[0].id - maxlearn - rss.get_unread_count()
     learned = 0
-    start_id = min_id
     while learned < maxlearn:
         limit = 200 if maxlearn > 200 else maxlearn
-        headlines = feeds[index].headlines(view_mode = 'all_articles', since_id = min_id + learned, limit = limit)
+        headlines = feeds[3].headlines(view_mode = 'all_articles', since_id = start_id + learned, limit = limit)
         for article in headlines:
             if not article.unread:
                 queue.append(article.title)
@@ -89,31 +67,29 @@ def learn_last_read(rss, queue, args, configuration):
         print_time_message("Learned titles from", learned, "RSS articles.")
     return queue
 
-def print_time_message(message):
-    current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
-    print current_time, message
+def print_time_message(*args):
+    print strftime("%Y-%m-%d %H:%M:%S:", gmtime()),
+    for items in args:
+        print items,
+    print
 
 # Main function to check new rss posts.
 def monitor_rss(rss, queue, ignore_list, args, configuration):
-    max_id = 0
+    feeds = rss.get_feeds()
+    headlines = feeds[3].headlines(view_mode = 'all_articles', limit=1)
+    start_id = headlines[0].id - rss.get_unread_count()
     ratio = int(configuration.get('newsdedup', 'ratio'))
     sleeptime = int(configuration.get('newsdedup', 'sleep'))
     headlines = []
     while True:
         feeds = rss.get_feeds(unread_only = True)
-        if max_id == 0:
-            try:
-                headlines = feeds[1].headlines(view_mode='unread')
-            except:
-                pass
-        else:
-            try:
-                headlines = feeds[1].headlines(since_id = max_id, view_mode='unread')
-            except:
-                pass
+        try:
+            headlines = feeds[1].headlines(since_id = start_id, view_mode='unread')
+        except:
+            pass
         for head in headlines:
-            if head.id > max_id:
-                max_id = head.id
+            if head.id > start_id:
+                start_id = head.id
             if args.verbose:
                 print_time_message(head.title)
             if (not head.is_updated) and (not head.feed_id in ignore_list):
@@ -127,9 +103,7 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='newsdedup',
-        description='''This programs tries to dedup RSS articles handled by Tiny tiny RSS.
-            
-            Default configuration file is newsdedup.cfg in the current directory.''',
+        description='''This programs dedups RSS articles handled by Tiny tiny RSS.''',
          epilog='''Program made by Peter Reuterås, @reuteras on Twitter. If you find a 
             bug please let me know.''')
     parser.add_argument('configFile', metavar='newsdedup.cfg', default='newsdedup.cfg', nargs='?', help='Specify configuration file.')
