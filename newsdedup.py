@@ -86,8 +86,12 @@ def learn_last_read(rss, queue, args, configuration):
                 queue.append(article.title)
                 learned += 1
     if args.verbose:
-        print "Learned titles from", learned, "RSS articles."
-    return queue                
+        print_time_message("Learned titles from", learned, "RSS articles.")
+    return queue
+
+def print_time_message(message):
+    current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
+    print current_time, message
 
 # Main function to check new rss posts.
 def monitor_rss(rss, queue, ignore_list, args, configuration):
@@ -111,15 +115,13 @@ def monitor_rss(rss, queue, ignore_list, args, configuration):
             if head.id > max_id:
                 max_id = head.id
             if args.verbose:
-                current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
-                print current_time, head.title
+                print_time_message(head.title)
             if (not head.is_updated) and (not head.feed_id in ignore_list):
                 if compare_title_to_queue(queue, head.title, ratio, args.verbose) > 0:
                     handle_known_news(rss, head, ignore_list)
                 queue.append(head.title)
         if args.debug:
-            current_time=strftime("%Y-%m-%d %H:%M:%S:", gmtime())
-            print current_time, "Sleeping."
+            print_time_message("Sleeping.")
         time.sleep(sleeptime)
 
 if __name__ == '__main__':
@@ -146,5 +148,5 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             sys.exit(1)
         except:
-            print "Connection lost. Sleeping for 30 seconds."
+            print_time_message("Connection lost. Sleeping for 30 seconds.")
             time.sleep(30)
