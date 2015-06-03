@@ -40,15 +40,15 @@ def init_ignore_list(config):
     ignorestring = config.get('newsdedup', 'ignore')
     return ignorestring.split(',')
 
-def compare_to_queue(queue, title, ratio, arguments):
+def compare_to_queue(queue, head, ratio, arguments):
     """Compare current title to all in queue."""
     for item in queue:
-        if fuzz.token_sort_ratio(item, title) > ratio:
+        if fuzz.token_sort_ratio(item, head.title) > ratio:
             if arguments.verbose:
-                print "Old: ", item
-                print "New: ", title
-                print "Ratio: ", fuzz.token_sort_ratio(item, title)
-            return fuzz.token_sort_ratio(item, title)
+                print "Old title: " + item
+                print "New: " + head.feed_title + ": " + head.title
+                print "Ratio:", fuzz.token_sort_ratio(item, head.title)
+            return fuzz.token_sort_ratio(item, head.title)
     return 0
 
 def handle_known_news(rss, head):
@@ -98,9 +98,9 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
             if head.id > start_id:
                 start_id = head.id
             if arguments.verbose:
-                print_time_message(head.title)
+                print_time_message(head.feed_title + ": " + head.title)
             if (not head.is_updated) and (not head.feed_id in ignore_list):
-                if compare_to_queue(queue, head.title, ratio, arguments) > 0:
+                if compare_to_queue(queue, head, ratio, arguments) > 0:
                     handle_known_news(rss, head)
                 queue.append(head.title)
         if arguments.debug:
