@@ -6,6 +6,7 @@
 
 import ConfigParser
 import argparse
+import logging
 import sys
 import time
 from collections import deque
@@ -117,12 +118,16 @@ def main():
     parser.add_argument('configFile', metavar='newsdedup.cfg',
             	           default='newsdedup.cfg', nargs='?',
             	           help='Specify configuration file.')
-    parser.add_argument('-v', '--verbose', action="store_true",
-                        help='Verbose output.')
     parser.add_argument('-d', '--debug', action="store_true",
                         help='Debug output (separate from verbose).')
+    parser.add_argument('-q', '--quiet', action="store_true",
+                        help='Quiet, i.e. catch SSL warnings.')
+    parser.add_argument('-v', '--verbose', action="store_true",
+                        help='Verbose output.')
     args = parser.parse_args()
 
+    if args.quiet:
+        logging.captureWarnings(True)
     configuration = read_configuration(args.configFile)
     rss_api = init_ttrss(configuration)
     title_queue = init_title_queue(configuration)
