@@ -10,8 +10,11 @@ upgrade-requirements:
 	. $(virtualenv)/bin/activate && pip install --upgrade -r pip-requires.txt
 clean:
 	find . -name "*.pyc" -exec rm -f {} \;
-	rm -rf $(virtualenv)
+	rm -rf $(virtualenv) pylint
 shell:
 	. $(virtualenv)/bin/activate && $(SHELL)
 REQUIREMENTS:
 	. $(virtualenv)/bin/activate && pip freeze > REQUIREMENTS
+test-pylint:                                                                                                            
+	test -d pylint || mkdir pylint
+	pylint newsdedup.py > pylint/newsdedup.pylint || exit 0
