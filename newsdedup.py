@@ -6,6 +6,7 @@
 
 import ConfigParser
 import argparse
+import daemon
 import logging
 import sys
 import time
@@ -13,6 +14,13 @@ from collections import deque
 from fuzzywuzzy import fuzz
 from time import gmtime, strftime
 from ttrss.client import TTRClient
+
+context = daemon.DaemonContext(
+    umask=0o002,
+)
+
+context.signal_map = {
+}
 
 def read_configuration(config_file):
     """Read configuration file."""
@@ -45,9 +53,9 @@ def compare_to_queue(queue, head, ratio, arguments):
     for item in queue:
         if fuzz.token_sort_ratio(item, head.title) > ratio:
             if arguments.verbose:
-                print "Old title: " + item
-                print "New: " + head.feed_title + ": " + head.title
-                print "Ratio:", fuzz.token_sort_ratio(item, head.title)
+                print_time_message("### Old title: " + item)
+                print_time_message("### New: " + head.feed_title + ": " + head.title)
+                print_time_message("### Ratio:" + fuzz.token_sort_ratio(item, head.title))
             return fuzz.token_sort_ratio(item, head.title)
     return 0
 
@@ -107,8 +115,19 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
             print_time_message("Sleeping.")
         time.sleep(sleeptime)
 
+def run(rss_api, title_queue, feed_ignore_list, args, configuration):
+    """Main loop."""
+    while True:
+        try:
+            monitor_rss(rss_api, title_queue, feed_ignore_list, args, configuration)
+        except KeyboardInterrupt:
+            sys.exit(1)
+        except: # pylint: disable=bare-except
+            pass
+
+
 def main():
-    """Main function."""
+    """Main function to handle arguments."""
     parser = argparse.ArgumentParser(
         prog='newsdedup',
         description='''This programs dedups RSS articles handled by
@@ -120,6 +139,8 @@ def main():
             	           help='Specify configuration file.')
     parser.add_argument('-d', '--debug', action="store_true",
                         help='Debug output (separate from verbose).')
+    parser.add_argument('-D', '--daemon', action="store_true",
+                        help='Run as daemon.')
     parser.add_argument('-q', '--quiet', action="store_true",
                         help='Quiet, i.e. catch SSL warnings.')
     parser.add_argument('-v', '--verbose', action="store_true",
@@ -133,13 +154,12 @@ def main():
     title_queue = init_title_queue(configuration)
     feed_ignore_list = init_ignore_list(configuration)
     learn_last_read(rss_api, title_queue, args, configuration)
-    while True:
-        try:
-            monitor_rss(rss_api, title_queue, feed_ignore_list, args, configuration)
-        except KeyboardInterrupt:
-            sys.exit(1)
-        except: # pylint: disable=bare-except
-            pass
+
+    if args.daemon:
+        with context:
+            run(rss_api, title_queue, feed_ignore_list, args, configuration)
+    else:
+        run(rss_api, title_queue, feed_ignore_list, args, configuration)
 
 if __name__ == '__main__':
     main()

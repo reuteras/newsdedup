@@ -1,0 +1,14 @@
+[Unit]
+Description=News dedup for Tiny Tiny RSS.
+After=syslog.target network.target
+
+[Service]
+Environment=VIRTUAL_ENV=/<your path/.env
+Environment=PATH=/your path/.env/bin
+ExecStart=/your path/newsdedup.py -D -v -q
+User=<username>
+Group=<username>
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
