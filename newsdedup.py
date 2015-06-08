@@ -53,9 +53,9 @@ def compare_to_queue(queue, head, ratio, arguments):
     for item in queue:
         if fuzz.token_sort_ratio(item, head.title) > ratio:
             if arguments.verbose:
-                print_time_message("### Old title: " + item)
-                print_time_message("### New: " + head.feed_title + ": " + head.title)
-                print_time_message("### Ratio:" + fuzz.token_sort_ratio(item, head.title))
+                print_time_message(arguments, "### Old title: " + item)
+                print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
+                print_time_message(arguments, "### Ratio:" + fuzz.token_sort_ratio(item, head.title))
             return fuzz.token_sort_ratio(item, head.title)
     return 0
 
@@ -81,12 +81,15 @@ def learn_last_read(rss, queue, arguments, config):
                 queue.append(article.title)
                 learned += 1
     if arguments.verbose:
-        print_time_message("Learned titles from " + str(learned) + " RSS articles.")
+        print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
     return queue
 
-def print_time_message(message):
+def print_time_message(arguments, message):
     """Print time and message."""
-    print strftime("%Y-%m-%d %H:%M:%S:", gmtime()), message
+    if arguments.daemon:
+        print message
+    else:
+        print strftime("%Y-%m-%d %H:%M:%S:", gmtime()), message
 
 def monitor_rss(rss, queue, ignore_list, arguments, config):
     """Main function to check new rss posts."""
@@ -106,13 +109,13 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
             if head.id > start_id:
                 start_id = head.id
             if arguments.verbose:
-                print_time_message(head.feed_title + ": " + head.title)
+                print_time_message(arguments, head.feed_title + ": " + head.title)
             if (not head.is_updated) and (not head.feed_id in ignore_list):
                 if compare_to_queue(queue, head, ratio, arguments) > 0:
                     handle_known_news(rss, head)
                 queue.append(head.title)
         if arguments.debug:
-            print_time_message("Sleeping.")
+            print_time_message(arguments, "Sleeping.")
         time.sleep(sleeptime)
 
 def run(rss_api, title_queue, feed_ignore_list, args, configuration):
@@ -155,11 +158,7 @@ def main():
     feed_ignore_list = init_ignore_list(configuration)
     learn_last_read(rss_api, title_queue, args, configuration)
 
-    if args.daemon:
-        with context:
-            run(rss_api, title_queue, feed_ignore_list, args, configuration)
-    else:
-        run(rss_api, title_queue, feed_ignore_list, args, configuration)
+    run(rss_api, title_queue, feed_ignore_list, args, configuration)
 
 if __name__ == '__main__':
     main()
