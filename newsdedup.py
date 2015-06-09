@@ -47,6 +47,8 @@ def learn_last_read(rss, queue, arguments, config):
     headlines = feeds[3].headlines(view_mode='all_articles', limit=1)
     start_id = headlines[0].id - maxlearn - rss.get_unread_count()
     learned = 0
+    if arguments.debug:
+        print_time_message(arguments, "Debug: start_id " + str(start_id) + ".")
     while learned < maxlearn:
         limit = 200 if maxlearn > 200 else maxlearn
         headlines = feeds[3].headlines(
