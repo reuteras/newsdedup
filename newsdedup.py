@@ -139,8 +139,8 @@ def main():
         epilog='''Program made by Peter Reuterås, @reuteras on Twitter.
             If you find a bug please let me know.''')
     parser.add_argument('configFile', metavar='newsdedup.cfg',
-            	           default='newsdedup.cfg', nargs='?',
-            	           help='Specify configuration file.')
+                        default='newsdedup.cfg', nargs='?',
+                        help='Specify configuration file.')
     parser.add_argument('-d', '--debug', action="store_true",
                         help='Debug output (separate from verbose).')
     parser.add_argument('-D', '--daemon', action="store_true",
