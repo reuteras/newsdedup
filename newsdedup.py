@@ -71,7 +71,7 @@ def compare_to_queue(queue, head, ratio, arguments):
             if arguments.verbose:
                 print_time_message(arguments, "### Old title: " + item)
                 print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
-                print_time_message(arguments, "### Ratio:" + fuzz.token_sort_ratio(item, head.title))
+                print_time_message(arguments, "### Ratio:" + str(fuzz.token_sort_ratio(item, head.title)))
             return fuzz.token_sort_ratio(item, head.title)
     return 0
 
