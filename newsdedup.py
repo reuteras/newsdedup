@@ -48,22 +48,6 @@ def init_ignore_list(config):
     ignorestring = config.get('newsdedup', 'ignore')
     return ignorestring.split(',')
 
-def compare_to_queue(queue, head, ratio, arguments):
-    """Compare current title to all in queue."""
-    for item in queue:
-        if fuzz.token_sort_ratio(item, head.title) > ratio:
-            if arguments.verbose:
-                print_time_message(arguments, "### Old title: " + item)
-                print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
-                print_time_message(arguments, "### Ratio:" + fuzz.token_sort_ratio(item, head.title))
-            return fuzz.token_sort_ratio(item, head.title)
-    return 0
-
-def handle_known_news(rss, head):
-    """Mark read and add stare. Might change in the future."""
-    rss.update_article(head.id, 1, 0)
-    rss.mark_read(head.id)
-
 def learn_last_read(rss, queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
     maxlearn = int(config.get('newsdedup', 'maxcount'))
@@ -83,6 +67,22 @@ def learn_last_read(rss, queue, arguments, config):
     if arguments.verbose:
         print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
     return queue
+
+def compare_to_queue(queue, head, ratio, arguments):
+    """Compare current title to all in queue."""
+    for item in queue:
+        if fuzz.token_sort_ratio(item, head.title) > ratio:
+            if arguments.verbose:
+                print_time_message(arguments, "### Old title: " + item)
+                print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
+                print_time_message(arguments, "### Ratio:" + fuzz.token_sort_ratio(item, head.title))
+            return fuzz.token_sort_ratio(item, head.title)
+    return 0
+
+def handle_known_news(rss, head):
+    """Mark read and add stare. Might change in the future."""
+    rss.update_article(head.id, 1, 0)
+    rss.mark_read(head.id)
 
 def print_time_message(arguments, message):
     """Print time and message."""
@@ -104,7 +104,7 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
         try:
             headlines = feeds[1].headlines(since_id=start_id, view_mode='unread')
         except: # pylint: disable=bare-except
-            pass
+            print_time_message(arguments, "Exception when trying to get feeds.")
         for head in headlines:
             if head.id > start_id:
                 start_id = head.id
@@ -126,8 +126,7 @@ def run(rss_api, title_queue, feed_ignore_list, args, configuration):
         except KeyboardInterrupt:
             sys.exit(1)
         except: # pylint: disable=bare-except
-            pass
-
+            print_time_message(args, "Exception in monitor_rss.")
 
 def main():
     """Main function to handle arguments."""
