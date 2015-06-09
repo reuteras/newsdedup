@@ -6,7 +6,6 @@
 
 import ConfigParser
 import argparse
-import daemon
 import logging
 import sys
 import time
@@ -14,13 +13,6 @@ from collections import deque
 from fuzzywuzzy import fuzz
 from time import gmtime, strftime
 from ttrss.client import TTRClient
-
-context = daemon.DaemonContext(
-    umask=0o002,
-)
-
-context.signal_map = {
-}
 
 def read_configuration(config_file):
     """Read configuration file."""
