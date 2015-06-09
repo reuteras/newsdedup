@@ -82,10 +82,14 @@ def handle_known_news(rss, head):
 
 def print_time_message(arguments, message):
     """Print time and message."""
-    if arguments.daemon:
-        print message
-    else:
-        print strftime("%Y-%m-%d %H:%M:%S:", gmtime()), message
+    try:
+        if arguments.daemon:
+            print message
+        else:
+            print strftime("%Y-%m-%d %H:%M:%S:", gmtime()), message
+    except Exception as error: # pylint: disable=broad-except
+        if arguments.debug:
+            print "Debug: Error in print_time_message: ", str(error)
 
 def monitor_rss(rss, queue, ignore_list, arguments, config):
     """Main function to check new rss posts."""
