@@ -121,8 +121,10 @@ def run(rss_api, title_queue, feed_ignore_list, args, configuration):
             monitor_rss(rss_api, title_queue, feed_ignore_list, args, configuration)
         except KeyboardInterrupt:
             sys.exit(1)
-        except: # pylint: disable=bare-except
+        except Exception as error: # pylint: disable=broad-except
             print_time_message(args, "Exception in monitor_rss.")
+            if args.debug:
+                print_time_message(args, "Debug: Message: " + str(error))
 
 def main():
     """Main function to handle arguments."""
