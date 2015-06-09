@@ -113,7 +113,7 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
             if (not head.is_updated) and (not head.feed_id in ignore_list):
                 if compare_to_queue(queue, head, ratio, arguments) > 0:
                     handle_known_news(rss, head)
-                queue.append(head.title)
+            queue.append(head.title)
         if arguments.debug:
             print_time_message(arguments, "Sleeping.")
         time.sleep(sleeptime)
