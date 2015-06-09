@@ -56,6 +56,8 @@ def learn_last_read(rss, queue, arguments, config):
             if not article.unread:
                 queue.append(article.title)
                 learned += 1
+        if arguments.debug:
+            print_time_message(arguments, "Debug: Learned titles from " + str(learned) + " RSS articles.")
     if arguments.verbose:
         print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
     return queue
