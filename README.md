@@ -17,6 +17,10 @@ To watch the logs you can run:
 
     journalctl -f --user-unit newsdedup
 
+Unmark stared articles from the command line with:
+
+    ./unstar.py
+
 ## Links
 Some of the relevant API:s used in this project.
 * [ttrss-python](http://ttrss-python.readthedocs.org/en/latest/)
