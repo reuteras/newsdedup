@@ -7,3 +7,6 @@ Environment=PATH=/home/<username>/<path>/src/newsdedup/.env/bin
 ExecStart=/home/<username>/<path>/src/newsdedup/newsdedup.py -D -v -q /home/<username>/<path>/src/newsdedup/newsdedup.cfg
 Restart=always
 TimeoutSec=0
+
+[Install]
+WantedBy=default.target
