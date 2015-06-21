@@ -17,7 +17,7 @@ def unstar_unread(rss_api, args):
     headlines = rss_api.get_headlines(feed_id=-1, limit=limit, view_mode='all_articles', show_excerpt=False)
     while headlines:
         for head in headlines:
-            message = head.feed_title + ": " + head.title, ": ", str(head.link)
+            message = str(head.feed_title) + ": " + str(head.title) + ": " + str(head.link)
             print message
         remove = raw_input("Remove messages? (y/n): ")
         if remove == "y":
