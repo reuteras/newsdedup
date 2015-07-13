@@ -24,6 +24,7 @@ def unstar_unread(rss_api, args):
             for head in headlines:
                 rss_api.update_article(head.id, 0, 0)
         headlines = rss_api.get_headlines(feed_id=-1, limit=limit, view_mode='all_articles', show_excerpt=False)
+        print "#"*80
 
 def main():
     """Main function to handle arguments."""
