@@ -3,7 +3,7 @@ env = virtualenv
 environment: 
 	test -d $(virtualenv) || $(env) --no-site-packages $(virtualenv)
 requires:
-	. $(virtualenv)/bin/activate && pip install -r pip-requires.txt --allow-external pygmaps --allow-unverified pygmaps
+	. $(virtualenv)/bin/activate && pip install -r pip-requires.txt --allow-external pygmaps --allow-unverified pygmaps 
 upgrade-requirements:
 	echo "Current versions"
 	. $(virtualenv)/bin/activate && pip freeze

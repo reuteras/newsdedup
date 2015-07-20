@@ -1,4 +1,5 @@
 fuzzywuzzy
+python-googl
 logging
 pylint
 python-Levenshtein
