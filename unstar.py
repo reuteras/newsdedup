@@ -24,7 +24,7 @@ def unstar_unread(rss_api, args, configuration):
         for head in headlines:
             if args.shorten:
                 try:
-                    link = googleapi.shorten(head.link)
+                    link = googleapi.shorten(head.link)['id']
                 except: # pylint: disable=bare-except
                     link = head.link
             else:
