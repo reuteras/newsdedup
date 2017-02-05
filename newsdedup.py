@@ -11,7 +11,6 @@ import sys
 import time
 from collections import deque
 from fuzzywuzzy import fuzz
-from time import gmtime, strftime
 from ttrss.client import TTRClient
 
 def read_configuration(config_file):
@@ -59,7 +58,8 @@ def learn_last_read(rss, queue, arguments, config):
                 queue.append(article.title)
                 learned += 1
         if arguments.debug:
-            print_time_message(arguments, "Debug: Learned titles from " + str(learned) + " RSS articles.")
+            print_time_message(arguments,
+                               "Debug: Learned titles from " + str(learned) + " RSS articles.")
     if arguments.verbose:
         print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
     return queue
@@ -71,7 +71,8 @@ def compare_to_queue(queue, head, ratio, arguments):
             if arguments.verbose:
                 print_time_message(arguments, "### Old title: " + item)
                 print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
-                print_time_message(arguments, "### Ratio:" + str(fuzz.token_sort_ratio(item, head.title)))
+                print_time_message(arguments, "### Ratio:" +
+                                   str(fuzz.token_sort_ratio(item, head.title)))
             return fuzz.token_sort_ratio(item, head.title)
     return 0
 
@@ -86,7 +87,7 @@ def print_time_message(arguments, message):
         if arguments.daemon:
             print message
         else:
-            print strftime("%Y-%m-%d %H:%M:%S:", gmtime()), message
+            print time.strftime("%Y-%m-%d %H:%M:%S:", time.gmtime()), message
     except Exception as error: # pylint: disable=broad-except
         if arguments.debug:
             print "Debug: Error in print_time_message: ", str(error)
