@@ -1,4 +1,4 @@
-virtualenv = .env3
+virtualenv = .env
 env = virtualenv-3
 pip = pip3
 environment: 
