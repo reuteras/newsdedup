@@ -30,13 +30,13 @@ def unstar_unread(rss_api, args, configuration):
             else:
                 link = head.link
             message = head.feed_id +": " + head.feed_title + ": " + head.title + ": " + link
-            print message
-        unstar = raw_input("Unstar messages? (y/n): ")
+            print(message)
+        unstar = input("Unstar messages? (y/n): ")
         if unstar == "y":
             for head in headlines:
                 rss_api.update_article(head.id, 0, 0)
         headlines = rss_api.get_headlines(feed_id=-1, limit=limit, view_mode='all_articles', show_excerpt=False)
-        print "#"*80
+        print("#"*80)
 
 def main():
     """Main function to handle arguments."""

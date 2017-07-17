@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2015 Peter Reuterås
 
-import ConfigParser
+import configparser
 import argparse
 import logging
 import sys
@@ -15,10 +15,10 @@ from ttrss.client import TTRClient
 
 def read_configuration(config_file):
     """Read configuration file."""
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read(config_file)
     if config.sections() == []:
-        print "Can't find configuration file."
+        print("Can't find configuration file.")
         sys.exit(1)
     return config
 
@@ -85,12 +85,12 @@ def print_time_message(arguments, message):
     """Print time and message."""
     try:
         if arguments.daemon:
-            print message
+            print(message)
         else:
-            print time.strftime("%Y-%m-%d %H:%M:%S:", time.gmtime()), message
+            print(time.strftime("%Y-%m-%d %H:%M:%S:", time.gmtime()), message)
     except Exception as error: # pylint: disable=broad-except
         if arguments.debug:
-            print "Debug: Error in print_time_message: ", str(error)
+            print("Debug: Error in print_time_message: ", str(error))
 
 def monitor_rss(rss, queue, ignore_list, arguments, config):
     """Main function to check new rss posts."""
