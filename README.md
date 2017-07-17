@@ -21,6 +21,8 @@ Unmark stared articles from the command line with:
 
     ./unstar.py
 
+This branch is for Python 2.
+
 ## Links
 Some of the relevant API:s used in this project.
 * [ttrss-python](http://ttrss-python.readthedocs.org/en/latest/)
