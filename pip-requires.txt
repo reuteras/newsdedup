@@ -1,6 +1,5 @@
 fuzzywuzzy
 python-googl
-logging
 pylint
 python-Levenshtein
 git+https://github.com/reuteras/ttrss-python@updateArticle#egg=ttrss-python
