@@ -7,10 +7,9 @@
 import argparse
 import logging
 import newsdedup
-from types import IntType
 
 def unstar_unread(rss_api, args, configuration):
-    if isinstance(args.limit, IntType):
+    if isinstance(args.limit, int):
         limit = args.limit
     else:
         limit = args.limit[0]
