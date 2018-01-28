@@ -28,7 +28,7 @@ def unstar_unread(rss_api, args, configuration):
                     link = head.link
             else:
                 link = head.link
-            message = head.feed_id +": " + head.feed_title + ": " + head.title + ": " + link
+            message = str(head.feed_id) +": " + head.feed_title + ": " + head.title + ": " + link
             print(message)
         unstar = input("Unstar messages? (y/n): ")
         if unstar == "y":

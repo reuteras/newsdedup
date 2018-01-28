@@ -111,7 +111,7 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
                 start_id = head.id
             if arguments.verbose:
                 print_time_message(arguments, head.feed_title + ": " + head.title)
-            if (not head.is_updated) and (not head.feed_id in ignore_list):
+            if (not head.is_updated) and (not str(head.feed_id) in ignore_list):
                 if compare_to_queue(queue, head, ratio, arguments) > 0:
                     handle_known_news(rss, head)
             queue.append(head.title)
