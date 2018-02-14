@@ -6,9 +6,12 @@
 
 import argparse
 import logging
+import operator
+
 import newsdedup
 
 def unstar_unread(rss_api, args, configuration):
+    """Unstar messages"""
     if isinstance(args.limit, int):
         limit = args.limit
     else:
@@ -18,9 +21,11 @@ def unstar_unread(rss_api, args, configuration):
         apikey = configuration.get('google', 'shortener')
         googleapi = googl.Googl(apikey)
 
-    headlines = rss_api.get_headlines(feed_id=-1, limit=limit, view_mode='all_articles', show_excerpt=False)
+    headlines = rss_api.get_headlines(feed_id=-1, limit=limit,
+                                      view_mode='all_articles', show_excerpt=False)
     while headlines:
-        for head in headlines:
+        headlines_sorted = sorted(headlines, key=operator.attrgetter('feed_id'))
+        for head in headlines_sorted:
             if args.shorten:
                 try:
                     link = googleapi.shorten(head.link)['id']
@@ -34,7 +39,8 @@ def unstar_unread(rss_api, args, configuration):
         if unstar == "y":
             for head in headlines:
                 rss_api.update_article(head.id, 0, 0)
-        headlines = rss_api.get_headlines(feed_id=-1, limit=limit, view_mode='all_articles', show_excerpt=False)
+        headlines = rss_api.get_headlines(feed_id=-1, limit=limit,
+                                          view_mode='all_articles', show_excerpt=False)
         print("#"*80)
 
 def main():
