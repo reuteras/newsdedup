@@ -18,12 +18,13 @@ def unstar_unread(rss_api, args, configuration):
         limit = args.limit[0]
     if args.shorten:
         import googl
-        apikey = configuration.get('google', 'shortener')
-        googleapi = googl.Googl(apikey)
+        googleapi = googl.Googl(configuration.get('google', 'shortener'))
 
-    headlines = rss_api.get_headlines(feed_id=-1, limit=limit,
+    headlines = rss_api.get_headlines(feed_id=-1,
                                       view_mode='all_articles', show_excerpt=False)
     while headlines:
+        listed = 0
+        read_list = []
         headlines_sorted = sorted(headlines, key=operator.attrgetter('feed_id'))
         for head in headlines_sorted:
             if args.shorten:
@@ -34,14 +35,18 @@ def unstar_unread(rss_api, args, configuration):
             else:
                 link = head.link
             message = str(head.feed_id) +": " + head.feed_title + ": " + head.title + ": " + link
+            read_list.append(head.id)
             print(message)
-        unstar = input("Unstar messages? (y/n): ")
-        if unstar == "y":
-            for head in headlines:
-                rss_api.update_article(head.id, 0, 0)
-        headlines = rss_api.get_headlines(feed_id=-1, limit=limit,
+            listed = listed + 1
+            if listed == limit or listed == len(headlines_sorted):
+                listed = 0
+                print("#"*80)
+                unstar = input("Unstar messages? (y/n): ")
+                if unstar == "y":
+                    for read_id in read_list:
+                        rss_api.update_article(read_id, 0, 0)
+        headlines = rss_api.get_headlines(feed_id=-1,
                                           view_mode='all_articles', show_excerpt=False)
-        print("#"*80)
 
 def main():
     """Main function to handle arguments."""
