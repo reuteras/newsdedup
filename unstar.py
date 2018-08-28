@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Unstar RSS articles."""
 #
-# Copyright (C) 2015 Peter Reuterås
+# Copyright (C) 2015 PR <code@reuteras.se>
 
 import argparse
 import logging
@@ -53,7 +53,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog='unstar',
         description='''Unstar tool for newsdedup.''',
-        epilog='''Program made by Peter Reuterås, @reuteras on Twitter.
+        epilog='''Program made by PR, @reuteras on Twitter.
             If you find a bug please let me know.''')
     parser.add_argument('configFile', metavar='newsdedup.cfg',
                         default='newsdedup.cfg', nargs='?',

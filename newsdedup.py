@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """News dedup for Tiny Tiny RSS."""
 #
-# Copyright (C) 2015 Peter Reuterås
+# Copyright (C) 2015 PR <code@reuteras.se>
 
 import configparser
 import argparse
@@ -137,7 +137,7 @@ def main():
         prog='newsdedup',
         description='''This programs dedups RSS articles handled by
             Tiny tiny RSS.''',
-        epilog='''Program made by Peter Reuterås, @reuteras on Twitter.
+        epilog='''Program made by PR, @reuteras on Twitter.
             If you find a bug please let me know.''')
     parser.add_argument('configFile', metavar='newsdedup.cfg',
                         default='newsdedup.cfg', nargs='?',
