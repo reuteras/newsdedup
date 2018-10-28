@@ -2,10 +2,12 @@ virtualenv = .env
 env = virtualenv-3
 pip = pip3
 environment: 
-	test -d $(virtualenv) || $(env) --no-site-packages $(virtualenv)
+	test -d $(virtualenv) || python3 -m venv $(virtualenv)
+	pip3 install -U pip
 requires:
-	. $(virtualenv)/bin/activate && $(pip) install -r pip-requires.txt --allow-external pygmaps --allow-unverified pygmaps 
+	. $(virtualenv)/bin/activate && $(pip) install -r pip-requires.txt
 upgrade-requirements:
+	pip3 install -U pip
 	echo "Current versions"
 	. $(virtualenv)/bin/activate && $(pip) freeze
 	. $(virtualenv)/bin/activate && $(pip) install --upgrade -r pip-requires.txt
