@@ -27,7 +27,9 @@ def init_ttrss(config):
     hostname = config.get('ttrss', 'hostname')
     username = config.get('ttrss', 'username')
     password = config.get('ttrss', 'password')
-    return TTRClient(hostname, username, password, auto_login=True)
+    client =  TTRClient(hostname, username, password, auto_login=False)
+    client.login()
+    return client
 
 def init_title_queue(config):
     """Init deque queue to store handled titles."""
