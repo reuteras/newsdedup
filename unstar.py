@@ -38,13 +38,13 @@ def unstar_unread(rss_api, args, configuration):
             read_list.append(head.id)
             print(message)
             listed = listed + 1
-            if listed == limit or listed == len(headlines_sorted):
-                listed = 0
+            if (limit > 0 and listed % limit == 0) or listed == len(headlines_sorted):
                 print("#"*80)
                 unstar = input("Unstar messages? (y/n): ")
                 if unstar == "y":
                     for read_id in read_list:
                         rss_api.update_article(read_id, 0, 0)
+                    read_list = []
         headlines = rss_api.get_headlines(feed_id=-1,
                                           view_mode='all_articles', show_excerpt=False)
 
