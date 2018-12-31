@@ -9,3 +9,6 @@ sleep=10
 ignore=1,2,3
 [google]
 shortener=<api key>
+[bitly]
+username=username
+apikey=R_-key
