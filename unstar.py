@@ -7,6 +7,7 @@
 import argparse
 import logging
 import operator
+import sys
 
 import newsdedup
 
@@ -17,8 +18,18 @@ def unstar_unread(rss_api, args, configuration):
     else:
         limit = args.limit[0]
     if args.shorten:
-        import googl
-        googleapi = googl.Googl(configuration.get('google', 'shortener'))
+        try:
+            import googl
+            shortenapi = googl.Googl(configuration.get('google', 'shortener'))
+        except: # pylint: disable=bare-except
+            print("Error importing and setting up Google API.")
+    elif args.bitly:
+        try:
+            import bitly_api
+            shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'), \
+                        configuration.get('bitly', 'apikey'))
+        except: # pylint: disable=bare-except
+            print("Error importing and setting up Bitly API.")
 
     headlines = rss_api.get_headlines(feed_id=-1,
                                       view_mode='all_articles', show_excerpt=False)
@@ -29,7 +40,12 @@ def unstar_unread(rss_api, args, configuration):
         for head in headlines_sorted:
             if args.shorten:
                 try:
-                    link = googleapi.shorten(head.link)['id']
+                    link = shortenapi.shorten(head.link)['id']
+                except: # pylint: disable=bare-except
+                    link = head.link
+            elif args.bitly:
+                try:
+                    link = shortenapi.shorten(head.link)['url']
                 except: # pylint: disable=bare-except
                     link = head.link
             else:
@@ -40,11 +56,13 @@ def unstar_unread(rss_api, args, configuration):
             listed = listed + 1
             if (limit > 0 and listed % limit == 0) or listed == len(headlines_sorted):
                 print("#"*80)
-                unstar = input("Unstar messages? (y/n): ")
+                unstar = input("Unstar messages? (y/n/q): ")
                 if unstar == "y":
                     for read_id in read_list:
                         rss_api.update_article(read_id, 0, 0)
-                    read_list = []
+                read_list = []
+                if unstar == "q":
+                    sys.exit()
         headlines = rss_api.get_headlines(feed_id=-1,
                                           view_mode='all_articles', show_excerpt=False)
 
@@ -62,6 +80,8 @@ def main():
                         help='Quiet, i.e. catch SSL warnings.')
     parser.add_argument('-s', '--shorten', action="store_true",
                         help='Shorten urls using Google.')
+    parser.add_argument('-b', '--bitly', action="store_true",
+                        help='Shorten urls using Bitly.')
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='Verbose output.')
     parser.add_argument('-l', '--limit', default=20, nargs=1, type=int,
