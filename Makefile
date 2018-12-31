@@ -10,7 +10,7 @@ upgrade-requirements:
 	. $(virtualenv)/bin/activate && $(pip) freeze
 	. $(virtualenv)/bin/activate && $(pip) install --upgrade -r pip-requires.txt
 upgrade-pip3:
-	pip3 install -U pip
+	. $(virtualenv)/bin/activate && pip3 install -U pip
 clean:
 	find . -name "*.pyc" -exec rm -f {} \;
 	rm -rf $(virtualenv) pylint
