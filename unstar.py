@@ -7,6 +7,7 @@
 import argparse
 import logging
 import operator
+import re
 import sys
 
 import newsdedup
@@ -46,6 +47,7 @@ def unstar_unread(rss_api, args, configuration):
             elif args.bitly:
                 try:
                     link = shortenapi.shorten(head.link)['url']
+                    link = re.sub("http://", "https://", link)
                 except: # pylint: disable=bare-except
                     link = head.link
             else:
