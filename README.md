@@ -1,5 +1,5 @@
 # newsdedup
-Starting project to deduplicate my news feed.
+A project to deduplicate my news feed.
 
 For a long time I've added a lot of RSS feeds and now I've ended up with a lot
 of duplicate entries for big stories. With this project I aim to move duplicates
