@@ -27,7 +27,7 @@ def init_ttrss(config):
     hostname = config.get('ttrss', 'hostname')
     username = config.get('ttrss', 'username')
     password = config.get('ttrss', 'password')
-    client =  TTRClient(hostname, username, password, auto_login=False)
+    client = TTRClient(hostname, username, password, auto_login=False)
     client.login()
     return client
 
