@@ -20,12 +20,14 @@ def unstar_unread(rss_api, args, configuration):
         limit = args.limit[0]
     if args.shorten:
         try:
+            # pylint: disable=import-outside-toplevel
             import googl
             shortenapi = googl.Googl(configuration.get('google', 'shortener'))
         except: # pylint: disable=bare-except
             print("Error importing and setting up Google API.")
     elif args.bitly:
         try:
+            # pylint: disable=import-outside-toplevel
             import bitly_api
             shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'), \
                         configuration.get('bitly', 'apikey'))
@@ -52,7 +54,12 @@ def unstar_unread(rss_api, args, configuration):
                     link = head.link
             else:
                 link = head.link
-            message = str(head.feed_id) +": " + head.feed_title + ": " + head.title + ": " + link
+
+            if args.shorten or args.bitly:
+                feed_title = re.sub(r"(:| - | \(.*\)).*", "", head.feed_title)
+            else:
+                feed_title = head.feed_title
+            message = str(head.feed_id) +": " + feed_title + ": " + head.title + ": " + link
             read_list.append(head.id)
             print(message)
             listed = listed + 1
