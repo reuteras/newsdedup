@@ -56,7 +56,7 @@ def unstar_unread(rss_api, args, configuration):
                 link = head.link
 
             if args.shorten or args.bitly:
-                feed_title = re.sub(r"(:| - | \(.*\)).*", "", head.feed_title)
+                feed_title = re.sub(r"(:| - | – | \(.*\)).*", "", head.feed_title)
             else:
                 feed_title = head.feed_title
             message = str(head.feed_id) +": " + feed_title + ": " + head.title + ": " + link
