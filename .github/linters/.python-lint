@@ -15,7 +15,8 @@ ignore-patterns=
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
-init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.join(os.path.dirname(find_pylintrc()), '.env/lib/python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '/site-packages')); sys.path.append('/opt/hostedtoolcache/Python/' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '.' + str(sys.version_info.micro) + '/x64/lib/python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '/site-packages'); print(sys.path)"
+#init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.join(os.path.dirname(find_pylintrc()), '.env/lib/python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '/site-packages')); sys.path.append('/opt/hostedtoolcache/Python/' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '.' + str(sys.version_info.micro) + '/x64/lib/python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '/site-packages'); print(sys.path)"
+init-hook="from pylint.config import find_pylintrc; import glob, os, sys; sys.path.append(os.path.join(os.path.dirname(find_pylintrc()), glob.glob('.env/lib/python**/site-packages')[0])); sys.path.append(glob.glob('/opt/hostedtoolcache/Python/**/x64/lib/python**/site-packages'))[0]; print(sys.path)"
 
 # Use multiple processes to speed up Pylint.
 jobs=1
