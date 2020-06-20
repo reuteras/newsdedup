@@ -2,5 +2,6 @@ git+https://github.com/bitly/bitly-api-python@master#egg=bitly_api
 fuzzywuzzy
 python-googl
 pylint
+pytest
 python-Levenshtein
 git+https://github.com/reuteras/ttrss-python@updateArticle#egg=ttrss-python
