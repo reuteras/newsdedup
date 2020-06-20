@@ -167,9 +167,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-# Test code
-
-def test_init_ignore_list():
-    """Test init_ignore_list()"""
-    config = read_configuration("newsdedup.cfg.default")
-    assert init_ignore_list(config) == ['1', '2', '3']
