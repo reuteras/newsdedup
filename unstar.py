@@ -12,27 +12,51 @@ import sys
 
 import newsdedup
 
-def unstar_unread(rss_api, args, configuration):
-    """Unstar messages"""
-    if isinstance(args.limit, int):
-        limit = args.limit
-    else:
-        limit = args.limit[0]
+def select_shortenapi(args, configuration):
+    """Select service for shortend url:s"""
     if args.shorten:
         try:
             # pylint: disable=import-outside-toplevel
-            import googl
+            import googl # pylint: disable=import-error
             shortenapi = googl.Googl(configuration.get('google', 'shortener'))
         except: # pylint: disable=bare-except
             print("Error importing and setting up Google API.")
     elif args.bitly:
         try:
             # pylint: disable=import-outside-toplevel
-            import bitly_api
+            import bitly_api # pylint: disable=import-error
             shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'), \
                         configuration.get('bitly', 'apikey'))
         except: # pylint: disable=bare-except
             print("Error importing and setting up Bitly API.")
+    return shortenapi
+
+def shorten_url(args, head, shortenapi):
+    """Shorten a url."""
+    if args.shorten:
+        try:
+            link = shortenapi.shorten(head.link)['id']
+        except: # pylint: disable=bare-except
+            link = head.link
+    elif args.bitly:
+        try:
+            link = shortenapi.shorten(head.link)['url']
+            link = re.sub("http://", "https://", link)
+        except: # pylint: disable=bare-except
+            link = head.link
+    else:
+        link = head.link
+
+    return link
+
+def unstar_unread(rss_api, args, configuration):
+    """Unstar messages"""
+    if isinstance(args.limit, int):
+        limit = args.limit
+    else:
+        limit = args.limit[0]
+
+    shortenapi = select_shortenapi(args, configuration)
 
     headlines = rss_api.get_headlines(feed_id=-1,
                                       view_mode='all_articles', show_excerpt=False)
@@ -41,19 +65,7 @@ def unstar_unread(rss_api, args, configuration):
         read_list = []
         headlines_sorted = sorted(headlines, key=operator.attrgetter('feed_id'))
         for head in headlines_sorted:
-            if args.shorten:
-                try:
-                    link = shortenapi.shorten(head.link)['id']
-                except: # pylint: disable=bare-except
-                    link = head.link
-            elif args.bitly:
-                try:
-                    link = shortenapi.shorten(head.link)['url']
-                    link = re.sub("http://", "https://", link)
-                except: # pylint: disable=bare-except
-                    link = head.link
-            else:
-                link = head.link
+            link = shorten_url(args, head, shortenapi)
 
             if args.shorten or args.bitly:
                 feed_title = re.sub(r"(:| - | – | \(.*\)).*", "", head.feed_title)
