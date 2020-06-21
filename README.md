@@ -1,5 +1,8 @@
 # newsdedup
-A project to deduplicate my news feed.
+
+![Linter](https://github.com/reuteras/newsdedup/workflows/Linter/badge.svg)
+
+A project to de duplicate my news feed.
 
 For a long time I've added a lot of RSS feeds and now I've ended up with a lot
 of duplicate entries for big stories. With this project I aim to move duplicates
@@ -24,7 +27,9 @@ Unmark stared articles from the command line with:
 This branch is for Python 2.
 
 ## Links
+
 Some of the relevant API:s used in this project.
+
 * [ttrss-python](http://ttrss-python.readthedocs.org/en/latest/)
 * [Tiny Tiny RSS - JSON API Reference](https://tt-rss.org/redmine/projects/tt-rss/wiki/JsonApiReference)
 * [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy)
