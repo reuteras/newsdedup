@@ -4,11 +4,11 @@ pip = pip3
 environment: 
 	test -d $(virtualenv) || python3 -m venv $(virtualenv)
 requires:
-	. $(virtualenv)/bin/activate && $(pip) install -r pip-requires.txt
+	. $(virtualenv)/bin/activate && $(pip) install -r requirements.txt
 upgrade-requirements:
 	echo "Current versions"
 	. $(virtualenv)/bin/activate && $(pip) freeze
-	. $(virtualenv)/bin/activate && $(pip) install --upgrade -r pip-requires.txt
+	. $(virtualenv)/bin/activate && $(pip) install --upgrade -r requirements.txt
 upgrade-pip3:
 	. $(virtualenv)/bin/activate && pip3 install -U pip
 clean:
