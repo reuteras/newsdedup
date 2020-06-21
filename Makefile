@@ -13,7 +13,7 @@ upgrade-pip3:
 	. $(virtualenv)/bin/activate && pip3 install -U pip
 clean:
 	find . -name "*.pyc" -exec rm -f {} \;
-	rm -rf $(virtualenv) pylint
+	rm -rf $(virtualenv) pylint __pycache__
 shell:
 	. $(virtualenv)/bin/activate && $(SHELL)
 REQUIREMENTS:
