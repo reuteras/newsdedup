@@ -17,14 +17,14 @@ def select_shortenapi(args, configuration):
     if args.shorten:
         try:
             # pylint: disable=import-outside-toplevel
-            import googl # pylint: disable=import-error
+            import googl
             shortenapi = googl.Googl(configuration.get('google', 'shortener'))
         except: # pylint: disable=bare-except
             print("Error importing and setting up Google API.")
     elif args.bitly:
         try:
             # pylint: disable=import-outside-toplevel
-            import bitly_api # pylint: disable=import-error
+            import bitly_api
             shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'), \
                         configuration.get('bitly', 'apikey'))
         except: # pylint: disable=bare-except
