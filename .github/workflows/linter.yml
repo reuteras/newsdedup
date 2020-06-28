@@ -28,7 +28,7 @@ jobs:
         python3 -m venv .venv
         .venv/bin/pip install -r requirements.txt
 
-	# Now we move the dependencies where super-linter can see them
+    # Now we move the dependencies where super-linter can see them
     - name: Move the dependencies
       run: mv .venv /home/runner/work/_temp/_github_workflow
     # Now we set the PYTHONPATH to the path of the dependencies *inside* the container
