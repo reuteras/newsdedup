@@ -10,7 +10,7 @@ import logging
 import sys
 import time
 from collections import deque
-from fuzzywuzzy import fuzz # pylint: disable=import-error
+from fuzzywuzzy import fuzz
 from ttrss.client import TTRClient # pylint: disable=import-error
 
 def read_configuration(config_file):
