@@ -12,9 +12,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -22,13 +20,21 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    # Install dependencies with pip
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install flake8 pytest setuptools
-        if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+    - name: Install missing python packages
+      run: sudo apt-get install -y --no-install-recommends python3-venv python3-setuptools
 
-    # Runs a single command using the runners shell
+    - name: Install dependencies with pip + requirements.txt
+      run: |
+        python3 -m venv .venv
+        .venv/bin/pip install -r requirements.txt
+
+	# Now we move the dependencies where super-linter can see them
+    - name: Move the dependencies
+      run: mv .venv /home/runner/work/_temp/_github_workflow
+    # Now we set the PYTHONPATH to the path of the dependencies *inside* the container
     - name: Lint Code Base
-      uses: docker://github/super-linter:v2.1.0
+      uses: docker://github/super-linter:v2.2.0
+      env:
+        VALIDATE_ALL_CODEBASE: true
+        PYTHONPATH: "/github/workspace/:/github/workflow/.venv/lib/python3.6/site-packages"
+
