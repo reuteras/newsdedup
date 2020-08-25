@@ -12,6 +12,7 @@ import time
 from collections import deque
 from fuzzywuzzy import fuzz
 from ttrss.client import TTRClient
+from ttrss.exceptions import TTRApiDisabled, TTRNotLoggedIn, TTRAuthFailure
 
 def read_configuration(config_file):
     """Read configuration file."""
@@ -24,11 +25,18 @@ def read_configuration(config_file):
 
 def init_ttrss(config):
     """Init Tiny tiny RSS API."""
-    hostname = config.get('ttrss', 'hostname')
-    username = config.get('ttrss', 'username')
-    password = config.get('ttrss', 'password')
-    client = TTRClient(hostname, username, password, auto_login=False)
-    client.login()
+    try:
+        hostname = config.get('ttrss', 'hostname')
+        username = config.get('ttrss', 'username')
+        password = config.get('ttrss', 'password')
+    except: # pylint: disable=bare-except
+        print("Could not read needed config parameters.")
+    try:
+        client = TTRClient(hostname, username, password, auto_login=False)
+        client.login()
+    except (TTRApiDisabled, TTRNotLoggedIn, TTRAuthFailure) as error:
+        print("Couldn't setup TTRClient: ", error)
+        sys.exit(1)
     return client
 
 def init_title_queue(config):
@@ -80,7 +88,7 @@ def compare_to_queue(queue, head, ratio, arguments):
 
 def handle_known_news(rss, head):
     """Mark read and add stare. Might change in the future."""
-    rss.update_article(head.id, 1, 0)
+    rss.mark_starred(head.id)
     rss.mark_read(head.id)
 
 def print_time_message(arguments, message):
@@ -96,16 +104,14 @@ def print_time_message(arguments, message):
 
 def monitor_rss(rss, queue, ignore_list, arguments, config):
     """Main function to check new rss posts."""
-    feeds = rss.get_feeds()
-    headlines = feeds[3].headlines(view_mode='all_articles', limit=1)
+    headlines = rss.get_headlines(view_mode='all_articles', limit=0)
     start_id = headlines[0].id - rss.get_unread_count()
     ratio = int(config.get('newsdedup', 'ratio'))
     sleeptime = int(config.get('newsdedup', 'sleep'))
     headlines = []
     while True:
-        feeds = rss.get_feeds(unread_only=True)
         try:
-            headlines = feeds[1].headlines(since_id=start_id, view_mode='unread')
+            headlines = rss.get_headlines(since_id=start_id, view_mode='unread')
         except: # pylint: disable=bare-except
             print_time_message(arguments, "Exception when trying to get feeds.")
         for head in headlines:
