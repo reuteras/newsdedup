@@ -9,8 +9,8 @@ import logging
 import operator
 import re
 import sys
-
 import newsdedup
+
 
 def select_shortenapi(args, configuration):
     """Select service for shortend url:s"""
@@ -27,6 +27,7 @@ def select_shortenapi(args, configuration):
         sys.exit(1)
     return shortenapi
 
+
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
     if args.bitly:
@@ -39,6 +40,7 @@ def shorten_url(args, head, shortenapi):
         link = head.link
 
     return link
+
 
 def unstar_unread(rss_api, args, configuration):
     """Unstar messages"""
@@ -78,6 +80,7 @@ def unstar_unread(rss_api, args, configuration):
         headlines = rss_api.get_headlines(feed_id=-1,
                                           view_mode='all_articles', show_excerpt=False)
 
+
 def main():
     """Main function to handle arguments."""
     parser = argparse.ArgumentParser(
@@ -103,6 +106,7 @@ def main():
     configuration = newsdedup.read_configuration(args.configFile)
     rss_api = newsdedup.init_ttrss(configuration)
     unstar_unread(rss_api, args, configuration)
+
 
 if __name__ == '__main__':
     main()

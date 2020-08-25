@@ -14,6 +14,7 @@ from fuzzywuzzy import fuzz
 from ttrss.client import TTRClient
 from ttrss.exceptions import TTRApiDisabled, TTRNotLoggedIn, TTRAuthFailure
 
+
 def read_configuration(config_file):
     """Read configuration file."""
     config = configparser.RawConfigParser()
@@ -23,13 +24,14 @@ def read_configuration(config_file):
         sys.exit(1)
     return config
 
+
 def init_ttrss(config):
     """Init Tiny tiny RSS API."""
     try:
         hostname = config.get('ttrss', 'hostname')
         username = config.get('ttrss', 'username')
         password = config.get('ttrss', 'password')
-    except: # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except
         print("Could not read needed config parameters.")
     try:
         client = TTRClient(hostname, username, password, auto_login=False)
@@ -39,15 +41,18 @@ def init_ttrss(config):
         sys.exit(1)
     return client
 
+
 def init_title_queue(config):
     """Init deque queue to store handled titles."""
     maxcount = int(config.get('newsdedup', 'maxcount'))
     return deque(maxlen=maxcount)
 
+
 def init_ignore_list(config):
     """Read ignore list from config and store in array."""
     ignorestring = config.get('newsdedup', 'ignore')
     return ignorestring.split(',')
+
 
 def learn_last_read(rss, queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
@@ -74,6 +79,7 @@ def learn_last_read(rss, queue, arguments, config):
         print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
     return queue
 
+
 def compare_to_queue(queue, head, ratio, arguments):
     """Compare current title to all in queue."""
     for item in queue:
@@ -86,10 +92,12 @@ def compare_to_queue(queue, head, ratio, arguments):
             return fuzz.token_sort_ratio(item, head.title)
     return 0
 
+
 def handle_known_news(rss, head):
     """Mark read and add stare. Might change in the future."""
     rss.mark_starred(head.id)
     rss.mark_read(head.id)
+
 
 def print_time_message(arguments, message):
     """Print time and message."""
@@ -98,9 +106,10 @@ def print_time_message(arguments, message):
             print(message)
         else:
             print(time.strftime("%Y-%m-%d %H:%M:%S:", time.gmtime()), message)
-    except Exception as error: # pylint: disable=broad-except
+    except Exception as error:  # pylint: disable=broad-except
         if arguments.debug:
             print("Debug: Error in print_time_message: ", str(error))
+
 
 def monitor_rss(rss, queue, ignore_list, arguments, config):
     """Main function to check new rss posts."""
@@ -112,7 +121,7 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
     while True:
         try:
             headlines = rss.get_headlines(since_id=start_id, view_mode='unread')
-        except: # pylint: disable=bare-except
+        except:  # pylint: disable=bare-except
             print_time_message(arguments, "Exception when trying to get feeds.")
         for head in headlines:
             if head.id > start_id:
@@ -127,6 +136,7 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
             print_time_message(arguments, "Sleeping.")
         time.sleep(sleeptime)
 
+
 def run(rss_api, title_queue, feed_ignore_list, args, configuration):
     """Main loop."""
     while True:
@@ -134,10 +144,11 @@ def run(rss_api, title_queue, feed_ignore_list, args, configuration):
             monitor_rss(rss_api, title_queue, feed_ignore_list, args, configuration)
         except KeyboardInterrupt:
             sys.exit(1)
-        except Exception as error: # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-except
             print_time_message(args, "Exception in monitor_rss.")
             if args.debug:
                 print_time_message(args, "Debug: Message: " + str(error))
+
 
 def main():
     """Main function to handle arguments."""
@@ -169,6 +180,7 @@ def main():
     learn_last_read(rss_api, title_queue, args, configuration)
 
     run(rss_api, title_queue, feed_ignore_list, args, configuration)
+
 
 if __name__ == '__main__':
     main()
