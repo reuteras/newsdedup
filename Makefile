@@ -3,6 +3,7 @@ env = virtualenv-3
 pip = pip3
 environment: 
 	test -d $(virtualenv) || python3 -m venv $(virtualenv)
+	. $(virtualenv)/bin/activate && pip3 install -U pip
 requires:
 	. $(virtualenv)/bin/activate && $(pip) install -r requirements.txt
 upgrade-requirements:
