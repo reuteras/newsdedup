@@ -27,7 +27,7 @@ jobs:
       run: |
         python3 -m venv .venv
         .venv/bin/python3 -m pip install -r requirements.txt
-        .venv/bin/python3 -m pip install --force-reinstall --upgrade typed-ast black
+        .venv/bin/python3 -m pip install --force-reinstall --upgrade typed-ast black regex
 
     # Now we move the dependencies where super-linter can see them
     - name: Move the dependencies
