@@ -31,7 +31,7 @@ def init_ttrss(config):
         hostname = config.get('ttrss', 'hostname')
         username = config.get('ttrss', 'username')
         password = config.get('ttrss', 'password')
-    except:  # pylint: disable=bare-except
+    except Exception:  # pylint: disable=broad-except
         print("Could not read needed config parameters.")
     try:
         client = TTRClient(hostname, username, password, auto_login=False)
@@ -121,7 +121,7 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
     while True:
         try:
             headlines = rss.get_headlines(since_id=start_id, view_mode='unread')
-        except:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             print_time_message(arguments, "Exception when trying to get feeds.")
         for head in headlines:
             if head.id > start_id:

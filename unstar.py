@@ -9,6 +9,7 @@ import logging
 import operator
 import re
 import sys
+import bitly_api
 import newsdedup
 
 
@@ -16,11 +17,9 @@ def select_shortenapi(args, configuration):
     """Select service for shortend url:s"""
     if args.bitly:
         try:
-            # pylint: disable=import-outside-toplevel
-            import bitly_api
             shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'),
-                        configuration.get('bitly', 'apikey'))
-        except:  # pylint: disable=bare-except
+                                              configuration.get('bitly', 'apikey'))
+        except Exception:  # pylint: disable=broad-except
             print("Error importing and setting up Bitly API.")
     else:
         print("No shorten api selected.")
@@ -34,7 +33,7 @@ def shorten_url(args, head, shortenapi):
         try:
             link = shortenapi.shorten(head.link)['url']
             link = re.sub("http://", "https://", link)
-        except:  # pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             link = head.link
     else:
         link = head.link
