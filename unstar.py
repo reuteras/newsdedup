@@ -14,14 +14,7 @@ import newsdedup
 
 def select_shortenapi(args, configuration):
     """Select service for shortend url:s"""
-    if args.shorten:
-        try:
-            # pylint: disable=import-outside-toplevel
-            import googl
-            shortenapi = googl.Googl(configuration.get('google', 'shortener'))
-        except: # pylint: disable=bare-except
-            print("Error importing and setting up Google API.")
-    elif args.bitly:
+    if args.bitly:
         try:
             # pylint: disable=import-outside-toplevel
             import bitly_api
@@ -29,16 +22,14 @@ def select_shortenapi(args, configuration):
                         configuration.get('bitly', 'apikey'))
         except: # pylint: disable=bare-except
             print("Error importing and setting up Bitly API.")
+    else:
+        print("No shorten api selected.")
+        sys.exit(1)
     return shortenapi
 
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
-    if args.shorten:
-        try:
-            link = shortenapi.shorten(head.link)['id']
-        except: # pylint: disable=bare-except
-            link = head.link
-    elif args.bitly:
+    if args.bitly:
         try:
             link = shortenapi.shorten(head.link)['url']
             link = re.sub("http://", "https://", link)
@@ -67,7 +58,7 @@ def unstar_unread(rss_api, args, configuration):
         for head in headlines_sorted:
             link = shorten_url(args, head, shortenapi)
 
-            if args.shorten or args.bitly:
+            if args.bitly:
                 feed_title = re.sub(r"(:| - | – | \(.*\)).*", "", head.feed_title)
             else:
                 feed_title = head.feed_title
@@ -80,7 +71,7 @@ def unstar_unread(rss_api, args, configuration):
                 unstar = input("Unstar messages? (y/n/q): ")
                 if unstar == "y":
                     for read_id in read_list:
-                        rss_api.update_article(read_id, 0, 0)
+                        rss_api.toggle_starred(read_id)
                 read_list = []
                 if unstar == "q":
                     sys.exit()
@@ -99,8 +90,6 @@ def main():
                         help='Specify configuration file.')
     parser.add_argument('-q', '--quiet', action="store_true",
                         help='Quiet, i.e. catch SSL warnings.')
-    parser.add_argument('-s', '--shorten', action="store_true",
-                        help='Shorten urls using Google.')
     parser.add_argument('-b', '--bitly', action="store_true",
                         help='Shorten urls using Bitly.')
     parser.add_argument('-v', '--verbose', action="store_true",
