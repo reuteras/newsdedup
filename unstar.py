@@ -18,9 +18,9 @@ def select_shortenapi(args, configuration):
         try:
             # pylint: disable=import-outside-toplevel
             import bitly_api
-            shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'), \
+            shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'),
                         configuration.get('bitly', 'apikey'))
-        except: # pylint: disable=bare-except
+        except:  # pylint: disable=bare-except
             print("Error importing and setting up Bitly API.")
     else:
         print("No shorten api selected.")
@@ -34,7 +34,7 @@ def shorten_url(args, head, shortenapi):
         try:
             link = shortenapi.shorten(head.link)['url']
             link = re.sub("http://", "https://", link)
-        except: # pylint: disable=bare-except
+        except:  # pylint: disable=bare-except
             link = head.link
     else:
         link = head.link
@@ -64,7 +64,7 @@ def unstar_unread(rss_api, args, configuration):
                 feed_title = re.sub(r"(:| - | – | \(.*\)).*", "", head.feed_title)
             else:
                 feed_title = head.feed_title
-            message = str(head.feed_id) +": " + feed_title + ": " + head.title + ": " + link
+            message = str(head.feed_id) + ": " + feed_title + ": " + head.title + ": " + link
             read_list.append(head.id)
             print(message)
             listed = listed + 1
