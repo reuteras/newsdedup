@@ -22,14 +22,12 @@ To watch the logs you can run:
 
 Unmark stared articles from the command line with:
 
-    ./unstar.py
-
-This branch is for Python 2.
+    ./unstar.py -b
 
 ## Links
 
 Some of the relevant API:s used in this project.
 
 * [ttrss-python](http://ttrss-python.readthedocs.org/en/latest/)
-* [Tiny Tiny RSS - JSON API Reference](https://tt-rss.org/redmine/projects/tt-rss/wiki/JsonApiReference)
+* [Tiny Tiny RSS - API Reference](https://tt-rss.org/wiki/ApiReference)
 * [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy)
