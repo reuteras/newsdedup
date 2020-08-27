@@ -48,19 +48,14 @@ def init_title_queue(config):
     return deque(maxlen=maxcount)
 
 
-def init_ignore_list(config):
-    """Read ignore list from config and store in array."""
-    ignorestring = config.get('newsdedup', 'ignore')
-    return ignorestring.split(',')
-
-
 def learn_last_read(rss, queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
     maxlearn = int(config.get('newsdedup', 'maxcount'))
     feeds = rss.get_feeds()
-    headlines = feeds[3].headlines(view_mode='all_articles', limit=1)
-    start_id = headlines[0].id - maxlearn - rss.get_unread_count()
+    start_id = feeds[3].headlines(view_mode='all_articles', limit=1)[0].id - \
+               maxlearn - rss.get_unread_count()
     learned = 0
+
     if arguments.debug:
         print_time_message(arguments, "Debug: start_id " + str(start_id) + ".")
     while learned < maxlearn:
@@ -111,13 +106,16 @@ def print_time_message(arguments, message):
             print("Debug: Error in print_time_message: ", str(error))
 
 
-def monitor_rss(rss, queue, ignore_list, arguments, config):
+def monitor_rss(rss, queue, arguments, configuration):
     """Main function to check new rss posts."""
-    headlines = rss.get_headlines(view_mode='all_articles', limit=0)
-    start_id = headlines[0].id - rss.get_unread_count()
-    ratio = int(config.get('newsdedup', 'ratio'))
-    sleeptime = int(config.get('newsdedup', 'sleep'))
+    ignore_list = configuration.get('newsdedup', 'ignore').split(',')
+    nostar_list = configuration.get('newsdedup', 'nostar').split(',')
+    ratio = int(configuration.get('newsdedup', 'ratio'))
+    sleeptime = int(configuration.get('newsdedup', 'sleep'))
     headlines = []
+
+    start_id = rss.get_headlines(view_mode='all_articles', limit=1)[0].id - rss.get_unread_count()
+
     while True:
         try:
             headlines = rss.get_headlines(since_id=start_id, view_mode='unread')
@@ -130,18 +128,21 @@ def monitor_rss(rss, queue, ignore_list, arguments, config):
                 print_time_message(arguments, head.feed_title + ": " + head.title)
             if (not head.is_updated) and (not str(head.feed_id) in ignore_list):
                 if compare_to_queue(queue, head, ratio, arguments) > 0:
-                    handle_known_news(rss, head)
+                    if not str(head.feed_id) in nostar_list:
+                        handle_known_news(rss, head)
+                    else:
+                        rss.mark_read(head.id)
             queue.append(head.title)
         if arguments.debug:
             print_time_message(arguments, "Sleeping.")
         time.sleep(sleeptime)
 
 
-def run(rss_api, title_queue, feed_ignore_list, args, configuration):
+def run(rss_api, title_queue, args, configuration):
     """Main loop."""
     while True:
         try:
-            monitor_rss(rss_api, title_queue, feed_ignore_list, args, configuration)
+            monitor_rss(rss_api, title_queue, args, configuration)
         except KeyboardInterrupt:
             sys.exit(1)
         except Exception as error:  # pylint: disable=broad-except
@@ -176,10 +177,9 @@ def main():
     configuration = read_configuration(args.configFile)
     rss_api = init_ttrss(configuration)
     title_queue = init_title_queue(configuration)
-    feed_ignore_list = init_ignore_list(configuration)
     learn_last_read(rss_api, title_queue, args, configuration)
 
-    run(rss_api, title_queue, feed_ignore_list, args, configuration)
+    run(rss_api, title_queue, args, configuration)
 
 
 if __name__ == '__main__':
