@@ -37,5 +37,6 @@ jobs:
       env:
         VALIDATE_ALL_CODEBASE: true
         VALIDATE_PYTHON_BLACK: false
+        VALIDATE_PYTHON_FLAKE8: false
         PYTHONPATH: "/github/workspace/:/github/workflow/.venv/lib/python3.6/site-packages"
 
