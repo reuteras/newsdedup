@@ -53,7 +53,7 @@ def learn_last_read(rss, queue, arguments, config):
     maxlearn = int(config.get('newsdedup', 'maxcount'))
     feeds = rss.get_feeds()
     start_id = feeds[3].headlines(view_mode='all_articles', limit=1)[0].id - \
-               maxlearn - rss.get_unread_count()
+                                  maxlearn - rss.get_unread_count()
     learned = 0
 
     if arguments.debug:
