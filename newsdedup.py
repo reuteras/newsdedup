@@ -88,10 +88,15 @@ def compare_to_queue(queue, head, ratio, arguments):
     return 0
 
 
-def handle_known_news(rss, head):
+def handle_known_news(rss, head, nostar_list, arguments):
     """Mark read and add stare. Might change in the future."""
-    rss.mark_starred(head.id)
-    rss.mark_read(head.id)
+    if str(head.feed_id) in nostar_list:
+        rss.mark_read(head.id)
+        if arguments.verbose:
+            print_time_message(arguments, head.feed_title + ": " + head.title)
+    else:
+        rss.mark_starred(head.id)
+        rss.mark_read(head.id)
 
 
 def print_time_message(arguments, message):
@@ -128,10 +133,7 @@ def monitor_rss(rss, queue, arguments, configuration):
                 print_time_message(arguments, head.feed_title + ": " + head.title)
             if (not head.is_updated) and (not str(head.feed_id) in ignore_list):
                 if compare_to_queue(queue, head, ratio, arguments) > 0:
-                    if not str(head.feed_id) in nostar_list:
-                        handle_known_news(rss, head)
-                    else:
-                        rss.mark_read(head.id)
+                    handle_known_news(rss, head, nostar_list, arguments)
             queue.append(head.title)
         if arguments.debug:
             print_time_message(arguments, "Sleeping.")
