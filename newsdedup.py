@@ -93,7 +93,7 @@ def handle_known_news(rss, head, nostar_list, arguments):
     if str(head.feed_id) in nostar_list:
         rss.mark_read(head.id)
         if arguments.verbose:
-            print_time_message(arguments, "nostar: " + head.feed_title + ": " + head.title)
+            print_time_message(arguments, "### nostar: " + head.feed_title + ": " + head.title)
     else:
         rss.mark_starred(head.id)
         rss.mark_read(head.id)
