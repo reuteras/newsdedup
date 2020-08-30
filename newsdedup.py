@@ -33,6 +33,7 @@ def init_ttrss(config):
         password = config.get('ttrss', 'password')
     except Exception:  # pylint: disable=broad-except
         print("Could not read needed config parameters.")
+        sys.exit(1)
     try:
         client = TTRClient(hostname, username, password, auto_login=False)
         client.login()
