@@ -6,6 +6,7 @@ Environment=VIRTUAL_ENV=/home/<username>/<path>/newsdedup/.env
 Environment=PATH=/home/<username>/<path>/src/newsdedup/.env/bin
 ExecStart=/home/<username>/<path>/src/newsdedup/newsdedup.py -D -v -q /home/<username>/<path>/src/newsdedup/newsdedup.cfg
 Restart=always
+RestartSec=10s
 TimeoutSec=0
 
 [Install]
