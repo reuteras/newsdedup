@@ -4,15 +4,16 @@
 #
 # Copyright (C) 2015 PR <code@reuteras.se>
 
-import configparser
 import argparse
+import configparser
 import logging
 import sys
 import time
 from collections import deque
+
 from fuzzywuzzy import fuzz
 from ttrss.client import TTRClient
-from ttrss.exceptions import TTRApiDisabled, TTRNotLoggedIn, TTRAuthFailure
+from ttrss.exceptions import TTRApiDisabled, TTRAuthFailure, TTRNotLoggedIn
 
 
 def read_configuration(config_file):

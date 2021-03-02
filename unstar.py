@@ -9,6 +9,7 @@ import logging
 import operator
 import re
 import sys
+
 import bitly_api
 import newsdedup
 
