@@ -127,6 +127,7 @@ disable=print-statement,
         next-method-defined,
         dict-items-not-iterating,
         dict-keys-not-iterating,
+        import-error,
         dict-values-not-iterating
 
 # Enable the message, report, category or checker with the given id(s). You can
