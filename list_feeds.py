@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2021 PR <code@reuteras.se>
 
-from newsdedup import read_configuration, init_ttrss
+from newsdedup import init_ttrss, read_configuration
 
 
 def main():
