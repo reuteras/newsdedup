@@ -26,6 +26,10 @@ Unmark stared articles from the command line with:
 
     ./unstar.py -b
 
+List all feeds:
+
+    ./list_feeds.py
+
 ## Links
 
 Some of the relevant API:s used in this project.
