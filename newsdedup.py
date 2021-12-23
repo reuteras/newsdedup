@@ -20,7 +20,7 @@ def read_configuration(config_file):
     """Read configuration file."""
     config = configparser.RawConfigParser()
     config.read(config_file)
-    if config.sections() == []:
+    if not config.sections():
         print("Can't find configuration file.")
         sys.exit(1)
     return config
@@ -29,9 +29,9 @@ def read_configuration(config_file):
 def init_ttrss(config):
     """Init Tiny tiny RSS API."""
     try:
-        hostname = config.get('ttrss', 'hostname')
-        username = config.get('ttrss', 'username')
-        password = config.get('ttrss', 'password')
+        hostname = config.get("ttrss", "hostname")
+        username = config.get("ttrss", "username")
+        password = config.get("ttrss", "password")
     except Exception:  # pylint: disable=broad-except
         print("Could not read needed config parameters.")
         sys.exit(1)
@@ -46,16 +46,19 @@ def init_ttrss(config):
 
 def init_title_queue(config):
     """Init deque queue to store handled titles."""
-    maxcount = int(config.get('newsdedup', 'maxcount'))
+    maxcount = int(config.get("newsdedup", "maxcount"))
     return deque(maxlen=maxcount)
 
 
 def learn_last_read(rss, queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
-    maxlearn = int(config.get('newsdedup', 'maxcount'))
+    maxlearn = int(config.get("newsdedup", "maxcount"))
     feeds = rss.get_feeds()
-    start_id = feeds[3].headlines(view_mode='all_articles', limit=1)[0].id - \
-                                  maxlearn - rss.get_unread_count()
+    start_id = (
+        feeds[3].headlines(view_mode="all_articles", limit=1)[0].id
+        - maxlearn
+        - rss.get_unread_count()
+    )
     learned = 0
 
     if arguments.debug:
@@ -63,17 +66,21 @@ def learn_last_read(rss, queue, arguments, config):
     while learned < maxlearn:
         limit = 200 if maxlearn > 200 else maxlearn
         headlines = feeds[3].headlines(
-            view_mode='all_articles',
-            since_id=start_id + learned, limit=limit)
+            view_mode="all_articles", since_id=start_id + learned, limit=limit
+        )
         for article in headlines:
             if not article.unread:
                 queue.append(article.title)
                 learned += 1
         if arguments.debug:
-            print_time_message(arguments,
-                               "Debug: Learned titles from " + str(learned) + " RSS articles.")
+            print_time_message(
+                arguments,
+                "Debug: Learned titles from " + str(learned) + " RSS articles.",
+            )
     if arguments.verbose:
-        print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
+        print_time_message(
+            arguments, "Learned titles from " + str(learned) + " RSS articles."
+        )
     return queue
 
 
@@ -83,9 +90,13 @@ def compare_to_queue(queue, head, ratio, arguments):
         if fuzz.token_sort_ratio(item, head.title) > ratio:
             if arguments.verbose:
                 print_time_message(arguments, "### Old title: " + item)
-                print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
-                print_time_message(arguments, "### Ratio:" +
-                                   str(fuzz.token_sort_ratio(item, head.title)))
+                print_time_message(
+                    arguments, "### New: " + head.feed_title + ": " + head.title
+                )
+                print_time_message(
+                    arguments,
+                    "### Ratio:" + str(fuzz.token_sort_ratio(item, head.title)),
+                )
             return fuzz.token_sort_ratio(item, head.title)
     return 0
 
@@ -95,7 +106,9 @@ def handle_known_news(rss, head, nostar_list, arguments):
     if str(head.feed_id) in nostar_list:
         rss.mark_read(head.id)
         if arguments.verbose:
-            print_time_message(arguments, "### nostar: " + head.feed_title + ": " + head.title)
+            print_time_message(
+                arguments, "### nostar: " + head.feed_title + ": " + head.title
+            )
     else:
         rss.mark_starred(head.id)
         rss.mark_read(head.id)
@@ -115,17 +128,20 @@ def print_time_message(arguments, message):
 
 def monitor_rss(rss, queue, arguments, configuration):
     """Main function to check new rss posts."""
-    ignore_list = configuration.get('newsdedup', 'ignore').split(',')
-    nostar_list = configuration.get('newsdedup', 'nostar').split(',')
-    ratio = int(configuration.get('newsdedup', 'ratio'))
-    sleeptime = int(configuration.get('newsdedup', 'sleep'))
+    ignore_list = configuration.get("newsdedup", "ignore").split(",")
+    nostar_list = configuration.get("newsdedup", "nostar").split(",")
+    ratio = int(configuration.get("newsdedup", "ratio"))
+    sleeptime = int(configuration.get("newsdedup", "sleep"))
     headlines = []
 
-    start_id = rss.get_headlines(view_mode='all_articles', limit=1)[0].id - rss.get_unread_count()
+    start_id = (
+        rss.get_headlines(view_mode="all_articles", limit=1)[0].id
+        - rss.get_unread_count()
+    )
 
     while True:
         try:
-            headlines = rss.get_headlines(since_id=start_id, view_mode='unread')
+            headlines = rss.get_headlines(since_id=start_id, view_mode="unread")
         except Exception:  # pylint: disable=broad-except
             print_time_message(arguments, "Exception when trying to get feeds.")
         for head in headlines:
@@ -158,22 +174,30 @@ def run(rss_api, title_queue, args, configuration):
 def main():
     """Main function to handle arguments."""
     parser = argparse.ArgumentParser(
-        prog='newsdedup',
-        description='''This programs dedups RSS articles handled by
-            Tiny tiny RSS.''',
-        epilog='''Program made by PR, @reuteras on Twitter.
-            If you find a bug please let me know.''')
-    parser.add_argument('configFile', metavar='newsdedup.cfg',
-                        default='newsdedup.cfg', nargs='?',
-                        help='Specify configuration file.')
-    parser.add_argument('-d', '--debug', action="store_true",
-                        help='Debug output (separate from verbose).')
-    parser.add_argument('-D', '--daemon', action="store_true",
-                        help='Run as daemon.')
-    parser.add_argument('-q', '--quiet', action="store_true",
-                        help='Quiet, i.e. catch SSL warnings.')
-    parser.add_argument('-v', '--verbose', action="store_true",
-                        help='Verbose output.')
+        prog="newsdedup",
+        description="""This programs dedups RSS articles handled by
+            Tiny tiny RSS.""",
+        epilog="""Program made by PR, @reuteras on Twitter.
+            If you find a bug please let me know.""",
+    )
+    parser.add_argument(
+        "configFile",
+        metavar="newsdedup.cfg",
+        default="newsdedup.cfg",
+        nargs="?",
+        help="Specify configuration file.",
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Debug output (separate from verbose).",
+    )
+    parser.add_argument("-D", "--daemon", action="store_true", help="Run as daemon.")
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Quiet, i.e. catch SSL warnings."
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     args = parser.parse_args()
 
     if args.quiet:
@@ -186,5 +210,5 @@ def main():
     run(rss_api, title_queue, args, configuration)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -18,8 +18,10 @@ def select_shortenapi(args, configuration):
     """Select service for shortend url:s"""
     if args.bitly:
         try:
-            shortenapi = bitly_api.Connection(configuration.get('bitly', 'username'),
-                                              configuration.get('bitly', 'apikey'))
+            shortenapi = bitly_api.Connection(
+                configuration.get("bitly", "username"),
+                configuration.get("bitly", "apikey"),
+            )
         except Exception:  # pylint: disable=broad-except
             print("Error importing and setting up Bitly API.")
     else:
@@ -32,7 +34,7 @@ def shorten_url(args, head, shortenapi):
     """Shorten a url."""
     if args.bitly:
         try:
-            link = shortenapi.shorten(head.link)['url']
+            link = shortenapi.shorten(head.link)["url"]
             link = re.sub("http://", "https://", link)
         except Exception:  # pylint: disable=broad-except
             link = head.link
@@ -51,12 +53,13 @@ def unstar_unread(rss_api, args, configuration):
 
     shortenapi = select_shortenapi(args, configuration)
 
-    headlines = rss_api.get_headlines(feed_id=-1,
-                                      view_mode='all_articles', show_excerpt=False)
+    headlines = rss_api.get_headlines(
+        feed_id=-1, view_mode="all_articles", show_excerpt=False
+    )
     while headlines:
         listed = 0
         read_list = []
-        headlines_sorted = sorted(headlines, key=operator.attrgetter('feed_id'))
+        headlines_sorted = sorted(headlines, key=operator.attrgetter("feed_id"))
         for head in headlines_sorted:
             link = shorten_url(args, head, shortenapi)
 
@@ -64,12 +67,14 @@ def unstar_unread(rss_api, args, configuration):
                 feed_title = re.sub(r"(:| - | – | \(.*\)).*", "", head.feed_title)
             else:
                 feed_title = head.feed_title
-            message = str(head.feed_id) + ": " + feed_title + ": " + head.title + ": " + link
+            message = (
+                str(head.feed_id) + ": " + feed_title + ": " + head.title + ": " + link
+            )
             read_list.append(head.id)
             print(message)
             listed = listed + 1
             if (limit > 0 and listed % limit == 0) or listed == len(headlines_sorted):
-                print("#"*80)
+                print("#" * 80)
                 unstar = input("Unstar messages? (y/n/q): ")
                 if unstar == "y":
                     for read_id in read_list:
@@ -77,28 +82,41 @@ def unstar_unread(rss_api, args, configuration):
                 read_list = []
                 if unstar == "q":
                     sys.exit()
-        headlines = rss_api.get_headlines(feed_id=-1,
-                                          view_mode='all_articles', show_excerpt=False)
+        headlines = rss_api.get_headlines(
+            feed_id=-1, view_mode="all_articles", show_excerpt=False
+        )
 
 
 def main():
     """Main function to handle arguments."""
     parser = argparse.ArgumentParser(
-        prog='unstar',
-        description='''Unstar tool for newsdedup.''',
-        epilog='''Program made by PR, @reuteras on Twitter.
-            If you find a bug please let me know.''')
-    parser.add_argument('configFile', metavar='newsdedup.cfg',
-                        default='newsdedup.cfg', nargs='?',
-                        help='Specify configuration file.')
-    parser.add_argument('-q', '--quiet', action="store_true",
-                        help='Quiet, i.e. catch SSL warnings.')
-    parser.add_argument('-b', '--bitly', action="store_true",
-                        help='Shorten urls using Bitly.')
-    parser.add_argument('-v', '--verbose', action="store_true",
-                        help='Verbose output.')
-    parser.add_argument('-l', '--limit', default=20, nargs=1, type=int,
-                        help='Limit output to x (20 default).')
+        prog="unstar",
+        description="""Unstar tool for newsdedup.""",
+        epilog="""Program made by PR, @reuteras on Twitter.
+            If you find a bug please let me know.""",
+    )
+    parser.add_argument(
+        "configFile",
+        metavar="newsdedup.cfg",
+        default="newsdedup.cfg",
+        nargs="?",
+        help="Specify configuration file.",
+    )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Quiet, i.e. catch SSL warnings."
+    )
+    parser.add_argument(
+        "-b", "--bitly", action="store_true", help="Shorten urls using Bitly."
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+    parser.add_argument(
+        "-l",
+        "--limit",
+        default=20,
+        nargs=1,
+        type=int,
+        help="Limit output to x (20 default).",
+    )
     args = parser.parse_args()
 
     if args.quiet:
@@ -108,5 +126,5 @@ def main():
     unstar_unread(rss_api, args, configuration)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

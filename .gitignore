@@ -62,5 +62,6 @@ target/
 # Configuration file
 *.cfg
 
-# pylint
+# lint
 pylint/
+bandit/

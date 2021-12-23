@@ -16,5 +16,6 @@ def main():
         for feed in rss_api.get_feeds(cat_id=category.id):
             print(feed.id, feed.title)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
