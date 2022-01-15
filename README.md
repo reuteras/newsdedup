@@ -22,7 +22,7 @@ To watch the logs you can run:
 
     journalctl -f --user-unit newsdedup
 
-Unmark stared articles from the command line with:
+Unmark stared articles from the command-line with:
 
     ./unstar.py -b
 
