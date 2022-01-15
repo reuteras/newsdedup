@@ -1,6 +1,6 @@
 # newsdedup
 
-![Linter](https://github.com/reuteras/newsdedup/workflows/Linter/badge.svg)
+[![Lint Code Base v4](https://github.com/reuteras/newsdedup/actions/workflows/linter.yml/badge.svg)](https://github.com/reuteras/newsdedup/actions/workflows/linter.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
