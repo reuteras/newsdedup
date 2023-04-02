@@ -1,4 +1,4 @@
-virtualenv = .env
+virtualenv = .venv
 $(virtualenv):
 	test -d $(virtualenv) || python3 -m venv $(virtualenv)
 	. $(virtualenv)/bin/activate && python -m pip install -U pip
@@ -37,4 +37,4 @@ show-results:
 	grep -A2 "Test results:" bandit/*
 	cat pylint/*
 tests: test-pylint test-bandit
-all: requires tests show-results black
+all: requires upgrade-requirements tests show-results black

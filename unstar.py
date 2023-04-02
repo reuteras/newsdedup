@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Unstar RSS articles."""
 #
-# Copyright (C) 2015 PR <code@reuteras.se>
+# Copyright (C) 2015-2023 PR <code@reuteras.se>
 
 import argparse
 import logging
@@ -92,7 +92,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog="unstar",
         description="""Unstar tool for newsdedup.""",
-        epilog="""Program made by PR, @reuteras on Twitter.
+        epilog="""Program made by PR, @reuteras@infosec.exchange on Mastodon.
             If you find a bug please let me know.""",
     )
     parser.add_argument(
@@ -126,5 +126,6 @@ def main():
     unstar_unread(rss_api, args, configuration)
 
 
+# Run main function
 if __name__ == "__main__":
     main()

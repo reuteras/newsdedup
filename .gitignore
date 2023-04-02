@@ -57,7 +57,7 @@ docs/_build/
 target/
 
 # PIP environment
-.env/
+.venv/
 
 # Configuration file
 *.cfg
