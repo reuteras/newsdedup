@@ -1,7 +1,7 @@
 git+https://github.com/bitly/bitly-api-python@master#egg=bitly_api
 black
+bandit
 fuzzywuzzy
-pylint
-pytest
+ruff
 python-Levenshtein
 git+https://github.com/Vassius/ttrss-python/@master#egg=ttrss-python
