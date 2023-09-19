@@ -4,4 +4,4 @@ bandit
 fuzzywuzzy
 ruff
 python-Levenshtein
-ttrss-python
+git+https://github.com/Vassius/ttrss-python.git@master
