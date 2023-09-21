@@ -8,9 +8,9 @@ import argparse
 import logging
 import operator
 import re
+import requests
 import sys
 
-import bitly_api
 import newsdedup
 
 
@@ -18,10 +18,7 @@ def select_shortenapi(args, configuration):
     """Select service for shortend url:s"""
     if args.bitly:
         try:
-            shortenapi = bitly_api.Connection(
-                configuration.get("bitly", "username"),
-                configuration.get("bitly", "apikey"),
-            )
+            shortenapi = configuration.get("bitly", "apikey")
         except Exception:  # pylint: disable=broad-except
             print("Error importing and setting up Bitly API.")
     else:
@@ -29,13 +26,22 @@ def select_shortenapi(args, configuration):
         sys.exit(1)
     return shortenapi
 
+def bitly_shorten(link, shortenapi):
+    """Call bitly API directly."""
+    headers = {
+        'Authorization': 'Bearer ' + shortenapi,
+        'Content-Type': 'application/json',
+    }
+
+    data = '{ "long_url": "' + link + '", "domain": "bit.ly" }'
+
+    return requests.post('https://api-ssl.bitly.com/v4/shorten', headers=headers, data=data).json()['link']
 
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
     if args.bitly:
         try:
-            link = shortenapi.shorten(head.link)["url"]
-            link = re.sub("http://", "https://", link)
+            link = bitly_shorten(head.link, shortenapi)
         except Exception:  # pylint: disable=broad-except
             link = head.link
     else:
