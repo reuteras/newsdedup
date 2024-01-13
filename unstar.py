@@ -9,9 +9,9 @@ import logging
 import operator
 import re
 import sys
-import requests
 
 import newsdedup
+import requests
 
 
 def select_shortenapi(args, configuration):
