@@ -8,8 +8,8 @@ import argparse
 import logging
 import operator
 import re
-import requests
 import sys
+import requests
 
 import newsdedup
 
@@ -22,8 +22,7 @@ def select_shortenapi(args, configuration):
         except Exception:  # pylint: disable=broad-except
             print("Error importing and setting up Bitly API.")
     else:
-        print("No shorten api selected.")
-        sys.exit(1)
+        shortenapi = None
     return shortenapi
 
 def bitly_shorten(link, shortenapi):
@@ -35,7 +34,12 @@ def bitly_shorten(link, shortenapi):
 
     data = '{ "long_url": "' + link + '", "domain": "bit.ly" }'
 
-    return requests.post('https://api-ssl.bitly.com/v4/shorten', headers=headers, data=data).json()['link']
+    return requests.post(
+            'https://api-ssl.bitly.com/v4/shorten', 
+            headers=headers,
+            data=data,
+            timeout=30
+            ).json()['link']
 
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
