@@ -25,21 +25,20 @@ def select_shortenapi(args, configuration):
         shortenapi = None
     return shortenapi
 
+
 def bitly_shorten(link, shortenapi):
     """Call bitly API directly."""
     headers = {
-        'Authorization': 'Bearer ' + shortenapi,
-        'Content-Type': 'application/json',
+        "Authorization": "Bearer " + shortenapi,
+        "Content-Type": "application/json",
     }
 
     data = '{ "long_url": "' + link + '", "domain": "bit.ly" }'
 
     return requests.post(
-            'https://api-ssl.bitly.com/v4/shorten', 
-            headers=headers,
-            data=data,
-            timeout=30
-            ).json()['link']
+        "https://api-ssl.bitly.com/v4/shorten", headers=headers, data=data, timeout=30
+    ).json()["link"]
+
 
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
