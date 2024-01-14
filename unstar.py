@@ -10,8 +10,8 @@ import operator
 import re
 import sys
 
-import newsdedup
 import requests
+import newsdedup
 
 
 def select_shortenapi(args, configuration):
