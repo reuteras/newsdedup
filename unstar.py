@@ -124,7 +124,7 @@ def main():
         "-n",
         "--notrack",
         action="store_true",
-        help="Remove some known trackers from the URL."
+        help="Remove some known trackers from the URL.",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     parser.add_argument(
