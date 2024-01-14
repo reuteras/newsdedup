@@ -42,13 +42,16 @@ def bitly_shorten(link, shortenapi):
 
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
+    link = head.link
+
+    if args.notrack:
+        link = re.sub(r"\?(utm|at_me).*$", "", link)
+
     if args.bitly:
         try:
             link = bitly_shorten(head.link, shortenapi)
         except Exception:  # pylint: disable=broad-except
-            link = head.link
-    else:
-        link = head.link
+            pass
 
     return link
 
@@ -116,6 +119,9 @@ def main():
     )
     parser.add_argument(
         "-b", "--bitly", action="store_true", help="Shorten urls using Bitly."
+    )
+    parser.add_argument(
+        "-n", "--notrack", action="store_true", help="Remove some known trackers from the URL."
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     parser.add_argument(
