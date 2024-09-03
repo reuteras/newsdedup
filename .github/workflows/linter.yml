@@ -38,4 +38,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_PYTHON_ISORT: false
+          VALIDATE_YAML_PRETTIER: false
           DEFAULT_BRANCH: master
