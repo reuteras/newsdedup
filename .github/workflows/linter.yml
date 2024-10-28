@@ -8,7 +8,8 @@ on:
   pull_request:
     branches: [master, main]
 
-permissions: read-all
+permissions:
+  contents: read
 
 # Set the Job #
 jobs:
@@ -24,6 +25,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Prepare Python
         uses: actions/setup-python@v5
