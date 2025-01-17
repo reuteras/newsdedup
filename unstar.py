@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Unstar RSS articles."""
 #
@@ -8,9 +8,9 @@ import argparse
 import logging
 import operator
 import re
-import requests
 import sys
 
+import requests
 import newsdedup
 
 
@@ -22,30 +22,36 @@ def select_shortenapi(args, configuration):
         except Exception:  # pylint: disable=broad-except
             print("Error importing and setting up Bitly API.")
     else:
-        print("No shorten api selected.")
-        sys.exit(1)
+        shortenapi = None
     return shortenapi
+
 
 def bitly_shorten(link, shortenapi):
     """Call bitly API directly."""
     headers = {
-        'Authorization': 'Bearer ' + shortenapi,
-        'Content-Type': 'application/json',
+        "Authorization": "Bearer " + shortenapi,
+        "Content-Type": "application/json",
     }
 
     data = '{ "long_url": "' + link + '", "domain": "bit.ly" }'
 
-    return requests.post('https://api-ssl.bitly.com/v4/shorten', headers=headers, data=data).json()['link']
+    return requests.post(
+        "https://api-ssl.bitly.com/v4/shorten", headers=headers, data=data, timeout=30
+    ).json()["link"]
+
 
 def shorten_url(args, head, shortenapi):
     """Shorten a url."""
+    link = head.link
+
+    if args.notrack:
+        link = re.sub(r"\?(utm|at_me).*$", "", link)
+
     if args.bitly:
         try:
             link = bitly_shorten(head.link, shortenapi)
         except Exception:  # pylint: disable=broad-except
-            link = head.link
-    else:
-        link = head.link
+            pass
 
     return link
 
@@ -113,6 +119,9 @@ def main():
     )
     parser.add_argument(
         "-b", "--bitly", action="store_true", help="Shorten urls using Bitly."
+    )
+    parser.add_argument(
+        "-n", "--notrack", action="store_true", help="Remove some known trackers from the URL."
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     parser.add_argument(
