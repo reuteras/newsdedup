@@ -121,7 +121,10 @@ def main():
         "-b", "--bitly", action="store_true", help="Shorten urls using Bitly."
     )
     parser.add_argument(
-        "-n", "--notrack", action="store_true", help="Remove some known trackers from the URL."
+        "-n",
+        "--notrack",
+        action="store_true",
+        help="Remove some known trackers from the URL.",
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     parser.add_argument(
