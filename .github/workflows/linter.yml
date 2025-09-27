@@ -44,5 +44,5 @@ jobs:
           VALIDATE_PYTHON_ISORT: false
           VALIDATE_PYTHON_PYLINT: false
           VALIDATE_YAML_PRETTIER: false
-          DEFAULT_BRANCH: main
+          DEFAULT_BRANCH: master
           VALIDATE_JSON_PRETTIER: false
