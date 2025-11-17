@@ -60,34 +60,30 @@ newsdedup now supports two RSS reader backends:
 
 To switch backends, edit your `newsdedup.cfg` file:
 
-```ini
-[newsdedup]
-backend=miniflux  # or ttrss
-```
+    [newsdedup]
+    backend=miniflux  # or ttrss
 
 ### Enhanced Duplicate Detection
 
 The duplicate detection has been significantly improved with:
 
-1. **Multiple Similarity Algorithms**:
-   - `token_sort` - Token-based sorting comparison (original)
-   - `token_set` - Set-based token comparison
-   - `partial` - Partial string matching
-   - `jaccard` - Jaccard similarity coefficient
-   - `combined` - Uses the best result from multiple methods (recommended)
+1.  **Multiple Similarity Algorithms**:
+    -   `token_sort` - Token-based sorting comparison (original)
+    -   `token_set` - Set-based token comparison
+    -   `partial` - Partial string matching
+    -   `jaccard` - Jaccard similarity coefficient
+    -   `combined` - Uses the best result from multiple methods (recommended)
 
-2. **URL-based Deduplication**:
-   - Detects duplicate articles by normalized URLs
-   - Removes tracking parameters automatically
-   - Can be disabled in configuration
+2.  **URL-based Deduplication**:
+    -   Detects duplicate articles by normalized URLs
+    -   Removes tracking parameters automatically
+    -   Can be disabled in configuration
 
 Configure in `newsdedup.cfg`:
 
-```ini
-[newsdedup]
-similarity_method=combined  # Choose your similarity algorithm
-check_urls=true            # Enable URL-based deduplication
-```
+    [newsdedup]
+    similarity_method=combined  # Choose your similarity algorithm
+    check_urls=true            # Enable URL-based deduplication
 
 ### Configuration
 
@@ -96,11 +92,10 @@ See `newsdedup.cfg.default` for a complete configuration example supporting both
 For **Miniflux**:
 1. Generate an API token in Miniflux Settings > API Keys
 2. Add to your config:
-```ini
-[miniflux]
-hostname=https://miniflux.example.org
-api_token=your-api-token-here
-```
+
+        [miniflux]
+        hostname=https://miniflux.example.org
+        api_token=your-api-token-here
 
 ## Links
 

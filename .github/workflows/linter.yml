@@ -46,5 +46,6 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_PYINK: false
           VALIDATE_YAML_PRETTIER: false
+          VALIDATE_MARKDOWN_PRETTIER: false
           DEFAULT_BRANCH: main
           VALIDATE_JSON_PRETTIER: false
