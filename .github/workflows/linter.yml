@@ -31,11 +31,16 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - run: pip install -r requirements.txt
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install dependencies
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          uv sync --all-extras
 
       # Run Linter against code base #
       - name: Lint Code Base
-        uses: github/super-linter/slim@v7
+        uses: github/super-linter/slim@2bdd90ed3262e023ac84bf8fe35dc480721fc1f2 # v8.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
