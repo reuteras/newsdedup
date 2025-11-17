@@ -22,7 +22,6 @@ miniflux = [
 dev = [
     "bandit>=1.7.0",
     "ruff>=0.1.0",
-    "black>=23.0.0",
 ]
 
 [project.scripts]
@@ -40,11 +39,18 @@ target-version = "py38"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PIE", "RET", "SIM", "PL"]
-ignore = ["E501"]
+ignore = [
+    "E501",    # Line too long (handled by formatter)
+    "T201",    # Print statements (intentional for CLI)
+    "BLE001",  # Blind exception catches (intentional for robustness)
+    "C901",    # Function complexity (main functions are intentionally complex)
+    "PERF203", # try-except in loop (intentional for main loop error handling)
+]
 
-[tool.black]
-line-length = 100
-target-version = ['py38']
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
 
 [tool.hatch.metadata]
 allow-direct-references = true

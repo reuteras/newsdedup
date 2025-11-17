@@ -152,9 +152,10 @@ class MinifluxBackend(RSSBackend):
         return [MinifluxCategory(cat) for cat in response.json()]
 
     def get_headlines(
-        self, feed_id=None, view_mode="unread", since_id=None, limit=None, show_excerpt=False
+        self, feed_id=None, view_mode="unread", since_id=None, limit=None, show_excerpt=False  # noqa: ARG002
     ):
         """Get entries/headlines."""
+        # Note: show_excerpt parameter kept for API compatibility but not used in Miniflux
         params = {}
 
         if view_mode == "unread":

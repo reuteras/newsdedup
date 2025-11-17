@@ -151,7 +151,7 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config):
     if arguments.debug:
         print_time_message(arguments, "Debug: start_id " + str(start_id) + ".")
     while learned < maxlearn:
-        limit = DEFAULT_BATCH_SIZE if maxlearn > DEFAULT_BATCH_SIZE else maxlearn
+        limit = min(maxlearn, DEFAULT_BATCH_SIZE)
         headlines = feeds[3].headlines(
             view_mode="all_articles", since_id=start_id + learned, limit=limit
         )

@@ -27,13 +27,12 @@ shell:
 
 # Run linting tools
 lint:
-	uv run black .
 	uv run ruff check .
 
 # Format code
 format:
-	uv run black .
 	uv run ruff check --fix .
+	uv run ruff format .
 
 # Run bandit security checks
 bandit:
