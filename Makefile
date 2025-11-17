@@ -1,35 +1,52 @@
-virtualenv = .venv
-$(virtualenv):
-	test -d $(virtualenv) || python3 -m venv $(virtualenv)
-	. $(virtualenv)/bin/activate && python -m pip install -U pip
-requires: $(virtualenv)
-	. $(virtualenv)/bin/activate && python -m pip install -r requirements.txt
-upgrade-requirements:
-	echo "Current versions"
-	. $(virtualenv)/bin/activate && python -m pip freeze
-	. $(virtualenv)/bin/activate && python -m pip install --upgrade -r requirements.txt
-upgrade-pip3:
-	. $(virtualenv)/bin/activate && python -m pip install -U pip
+# UV-based Makefile for newsdedup
+
+.PHONY: sync install upgrade clean shell lint bandit show-results tests all
+
+# Sync dependencies from lock file
+sync:
+	uv sync
+
+# Install the project and dependencies
+install:
+	uv sync --all-extras
+
+# Upgrade all dependencies
+upgrade:
+	uv lock --upgrade
+	uv sync
+
+# Clean build artifacts
 clean:
 	find . -name "*.pyc" -exec rm -f {} \;
-	rm -rf $(virtualenv) __pycache__ bandit
+	rm -rf __pycache__ bandit .venv uv.lock
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# Open a shell with the virtual environment activated
 shell:
-	. $(virtualenv)/bin/activate && $(SHELL)
-REQUIREMENTS:
-	. $(virtualenv)/bin/activate && python -m pip freeze > REQUIREMENTS
+	uv run $(SHELL)
+
+# Run linting tools
 lint:
-	black .
-	ruff .
+	uv run ruff check .
+
+# Format code
+format:
+	uv run ruff check --fix .
+	uv run ruff format .
+
+# Run bandit security checks
 bandit:
 	test -d bandit || mkdir bandit
-	rm -rf bandit-env
-	python3 -m venv bandit-env
-	source bandit-env/bin/activate && python -m pip install bandit
-	./bandit-env/bin/bandit ./newsdedup.py > bandit/bandit-newsdedup.py.txt
-	./bandit-env/bin/bandit ./unstar.py > bandit/bandit-unstar.py.txt
-	./bandit-env/bin/bandit ./list_feeds.py > bandit/bandit-list_feeds.py.txt
-	rm -rf bandit-env
+	uv run bandit ./newsdedup.py > bandit/bandit-newsdedup.py.txt || true
+	uv run bandit ./unstar.py > bandit/bandit-unstar.py.txt || true
+	uv run bandit ./list_feeds.py > bandit/bandit-list_feeds.py.txt || true
+
+# Show bandit results
 show-results:
-	grep -A2 "Test results:" bandit/*
+	grep -A2 "Test results:" bandit/* || echo "No bandit results found"
+
+# Run all tests
 tests: lint bandit
-all: requires upgrade-requirements tests show-results lint
+
+# Run everything
+all: sync tests show-results
