@@ -1,0 +1,53 @@
+[project]
+name = "newsdedup"
+version = "1.0.0"
+description = "A project to deduplicate news feed articles"
+authors = [
+    {name = "PR", email = "code@reuteras.se"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = [
+    "fuzzywuzzy>=0.18.0",
+    "python-Levenshtein>=0.12.0",
+    "requests>=2.31.0",
+    "ttrss-python @ git+https://github.com/Vassius/ttrss-python.git@master",
+]
+
+[project.optional-dependencies]
+miniflux = [
+    "requests>=2.31.0",
+]
+dev = [
+    "bandit>=1.7.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+]
+
+[project.scripts]
+newsdedup = "newsdedup:main"
+unstar = "unstar:main"
+list-feeds = "list_feeds:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PIE", "RET", "SIM", "PL"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

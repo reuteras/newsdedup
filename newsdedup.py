@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """News dedup for Tiny Tiny RSS."""
 #
 # Copyright (C) 2015 PR <code@reuteras.se>
@@ -7,6 +6,7 @@
 import argparse
 import configparser
 import logging
+import re
 import sys
 import time
 from collections import deque
@@ -14,6 +14,12 @@ from collections import deque
 from fuzzywuzzy import fuzz
 from ttrss.client import TTRClient
 from ttrss.exceptions import TTRApiDisabled, TTRAuthFailure, TTRNotLoggedIn
+
+from backends import create_backend
+
+# Constants
+DEFAULT_BATCH_SIZE = 200
+HTTP_OK = 200
 
 
 def read_configuration(config_file):
@@ -26,8 +32,23 @@ def read_configuration(config_file):
     return config
 
 
+def init_backend(config):
+    """Initialize RSS backend (TTRSS or Miniflux)."""
+    # Determine backend type from config, default to ttrss for backward compatibility
+    try:
+        backend_type = config.get("newsdedup", "backend")
+    except Exception:  # pylint: disable=broad-except
+        backend_type = "ttrss"
+
+    try:
+        return create_backend(backend_type, config)
+    except Exception as error:  # pylint: disable=broad-except
+        print(f"Could not initialize {backend_type} backend: {error}")
+        sys.exit(1)
+
+
 def init_ttrss(config):
-    """Init Tiny tiny RSS API."""
+    """Init Tiny tiny RSS API (deprecated - use init_backend instead)."""
     try:
         hostname = config.get("ttrss", "hostname")
         username = config.get("ttrss", "username")
@@ -50,7 +71,73 @@ def init_title_queue(config):
     return deque(maxlen=maxcount)
 
 
-def learn_last_read(rss, queue, arguments, config):
+def init_url_queue(config):
+    """Init deque queue to store handled URLs."""
+    maxcount = int(config.get("newsdedup", "maxcount"))
+    return deque(maxlen=maxcount)
+
+
+def normalize_url(url):
+    """Normalize URL by removing tracking parameters and fragments."""
+    # Remove common tracking parameters
+    tracking_params = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "fbclid",
+        "gclid",
+        "msclkid",
+        "mc_cid",
+        "mc_eid",
+    ]
+
+    # Remove fragment
+    url_without_fragment = url.split("#")[0]
+
+    # Remove tracking parameters
+    for param in tracking_params:
+        url_without_fragment = re.sub(rf"[?&]{param}=[^&]*", "", url_without_fragment)
+
+    # Clean up any trailing ? or &
+    return re.sub(r"[?&]$", "", url_without_fragment)
+
+
+def jaccard_similarity(str1, str2):
+    """Calculate Jaccard similarity between two strings."""
+    words1 = set(str1.lower().split())
+    words2 = set(str2.lower().split())
+
+    if not words1 or not words2:
+        return 0
+
+    intersection = len(words1.intersection(words2))
+    union = len(words1.union(words2))
+
+    return int((intersection / union) * 100) if union > 0 else 0
+
+
+def calculate_similarity(title1, title2, method="token_sort"):
+    """Calculate similarity between two titles using the specified method."""
+    if method == "token_sort":
+        return fuzz.token_sort_ratio(title1, title2)
+    if method == "token_set":
+        return fuzz.token_set_ratio(title1, title2)
+    if method == "partial":
+        return fuzz.partial_ratio(title1, title2)
+    if method == "jaccard":
+        return jaccard_similarity(title1, title2)
+    if method == "combined":
+        # Use a combination of methods for better accuracy
+        token_sort = fuzz.token_sort_ratio(title1, title2)
+        token_set = fuzz.token_set_ratio(title1, title2)
+        jaccard = jaccard_similarity(title1, title2)
+        return max(token_sort, token_set, jaccard)
+    return fuzz.token_sort_ratio(title1, title2)
+
+
+def learn_last_read(rss, title_queue, url_queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
     maxlearn = int(config.get("newsdedup", "maxcount"))
     feeds = rss.get_feeds()
@@ -64,13 +151,15 @@ def learn_last_read(rss, queue, arguments, config):
     if arguments.debug:
         print_time_message(arguments, "Debug: start_id " + str(start_id) + ".")
     while learned < maxlearn:
-        limit = 200 if maxlearn > 200 else maxlearn
+        limit = DEFAULT_BATCH_SIZE if maxlearn > DEFAULT_BATCH_SIZE else maxlearn
         headlines = feeds[3].headlines(
             view_mode="all_articles", since_id=start_id + learned, limit=limit
         )
         for article in headlines:
             if not article.unread:
-                queue.append(article.title)
+                title_queue.append(article.title)
+                if hasattr(article, "link") and article.link:
+                    url_queue.append(normalize_url(article.link))
                 learned += 1
         if arguments.debug:
             print_time_message(
@@ -78,27 +167,42 @@ def learn_last_read(rss, queue, arguments, config):
                 "Debug: Learned titles from " + str(learned) + " RSS articles.",
             )
     if arguments.verbose:
-        print_time_message(
-            arguments, "Learned titles from " + str(learned) + " RSS articles."
-        )
-    return queue
+        print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
+    return title_queue, url_queue
 
 
-def compare_to_queue(queue, head, ratio, arguments):
+def compare_to_queue(queue, head, ratio, arguments, similarity_method="token_sort"):
     """Compare current title to all in queue."""
     for item in queue:
-        if fuzz.token_sort_ratio(item, head.title) > ratio:
+        similarity = calculate_similarity(item, head.title, similarity_method)
+        if similarity > ratio:
             if arguments.verbose:
                 print_time_message(arguments, "### Old title: " + item)
-                print_time_message(
-                    arguments, "### New: " + head.feed_title + ": " + head.title
-                )
+                print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
                 print_time_message(
                     arguments,
-                    "### Ratio:" + str(fuzz.token_sort_ratio(item, head.title)),
+                    f"### Ratio: {similarity} (method: {similarity_method})",
                 )
-            return fuzz.token_sort_ratio(item, head.title)
+            return similarity
     return 0
+
+
+def check_url_duplicate(url_queue, head, arguments):
+    """Check if URL is already seen (duplicate)."""
+    if not hasattr(head, "link") or not head.link:
+        return False
+
+    normalized_url = normalize_url(head.link)
+
+    if normalized_url in url_queue:
+        if arguments.verbose:
+            print_time_message(
+                arguments, f"### URL duplicate found: {head.feed_title}: {head.title}"
+            )
+            print_time_message(arguments, f"### URL: {normalized_url}")
+        return True
+
+    return False
 
 
 def handle_known_news(rss, head, nostar_list, arguments):
@@ -106,9 +210,7 @@ def handle_known_news(rss, head, nostar_list, arguments):
     if str(head.feed_id) in nostar_list:
         rss.mark_read(head.id)
         if arguments.verbose:
-            print_time_message(
-                arguments, "### nostar: " + head.feed_title + ": " + head.title
-            )
+            print_time_message(arguments, "### nostar: " + head.feed_title + ": " + head.title)
     else:
         rss.mark_starred(head.id)
         rss.mark_read(head.id)
@@ -126,18 +228,28 @@ def print_time_message(arguments, message):
             print("Debug: Error in print_time_message: ", str(error))
 
 
-def monitor_rss(rss, queue, arguments, configuration):
+def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
     """Main function to check new rss posts."""
     ignore_list = configuration.get("newsdedup", "ignore").split(",")
     nostar_list = configuration.get("newsdedup", "nostar").split(",")
     ratio = int(configuration.get("newsdedup", "ratio"))
     sleeptime = int(configuration.get("newsdedup", "sleep"))
+
+    # Get similarity method from config, default to "combined" for better accuracy
+    try:
+        similarity_method = configuration.get("newsdedup", "similarity_method")
+    except Exception:  # pylint: disable=broad-except
+        similarity_method = "combined"
+
+    # Get URL deduplication setting from config, default to True
+    try:
+        check_urls = configuration.getboolean("newsdedup", "check_urls")
+    except Exception:  # pylint: disable=broad-except
+        check_urls = True
+
     headlines = []
 
-    start_id = (
-        rss.get_headlines(view_mode="all_articles", limit=1)[0].id
-        - rss.get_unread_count()
-    )
+    start_id = rss.get_headlines(view_mode="all_articles", limit=1)[0].id - rss.get_unread_count()
 
     while True:
         try:
@@ -145,24 +257,40 @@ def monitor_rss(rss, queue, arguments, configuration):
         except Exception:  # pylint: disable=broad-except
             print_time_message(arguments, "Exception when trying to get feeds.")
         for head in headlines:
-            if head.id > start_id:
-                start_id = head.id
+            start_id = max(start_id, head.id)
             if arguments.verbose:
                 print_time_message(arguments, head.feed_title + ": " + head.title)
             if (not head.is_updated) and (str(head.feed_id) not in ignore_list):
-                if compare_to_queue(queue, head, ratio, arguments) > 0:
+                is_duplicate = False
+
+                # Check URL-based duplication first
+                if check_urls and check_url_duplicate(url_queue, head, arguments):
+                    is_duplicate = True
+
+                # Then check title-based duplication
+                if (
+                    not is_duplicate
+                    and compare_to_queue(title_queue, head, ratio, arguments, similarity_method) > 0
+                ):
+                    is_duplicate = True
+
+                if is_duplicate:
                     handle_known_news(rss, head, nostar_list, arguments)
-            queue.append(head.title)
+
+            title_queue.append(head.title)
+            if hasattr(head, "link") and head.link:
+                url_queue.append(normalize_url(head.link))
+
         if arguments.debug:
             print_time_message(arguments, "Sleeping.")
         time.sleep(sleeptime)
 
 
-def run(rss_api, title_queue, args, configuration):
+def run(rss_api, title_queue, url_queue, args, configuration):
     """Main loop."""
     while True:
         try:
-            monitor_rss(rss_api, title_queue, args, configuration)
+            monitor_rss(rss_api, title_queue, url_queue, args, configuration)
         except KeyboardInterrupt:
             sys.exit(1)
         except Exception as error:  # pylint: disable=broad-except
@@ -203,11 +331,12 @@ def main():
     if args.quiet:
         logging.captureWarnings(True)
     configuration = read_configuration(args.configFile)
-    rss_api = init_ttrss(configuration)
+    rss_api = init_backend(configuration)
     title_queue = init_title_queue(configuration)
-    learn_last_read(rss_api, title_queue, args, configuration)
+    url_queue = init_url_queue(configuration)
+    learn_last_read(rss_api, title_queue, url_queue, args, configuration)
 
-    run(rss_api, title_queue, args, configuration)
+    run(rss_api, title_queue, url_queue, args, configuration)
 
 
 if __name__ == "__main__":

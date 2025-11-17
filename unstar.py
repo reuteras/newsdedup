@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Unstar RSS articles."""
 #
 # Copyright (C) 2015-2023 PR <code@reuteras.se>
 
 import argparse
+import contextlib
 import logging
 import operator
 import re
 import sys
 
 import requests
+
 import newsdedup
 
 
@@ -48,26 +49,19 @@ def shorten_url(args, head, shortenapi):
         link = re.sub(r"\?(utm|at_me).*$", "", link)
 
     if args.bitly:
-        try:
+        with contextlib.suppress(Exception):
             link = bitly_shorten(head.link, shortenapi)
-        except Exception:  # pylint: disable=broad-except
-            pass
 
     return link
 
 
 def unstar_unread(rss_api, args, configuration):
     """Unstar messages"""
-    if isinstance(args.limit, int):
-        limit = args.limit
-    else:
-        limit = args.limit[0]
+    limit = args.limit if isinstance(args.limit, int) else args.limit[0]
 
     shortenapi = select_shortenapi(args, configuration)
 
-    headlines = rss_api.get_headlines(
-        feed_id=-1, view_mode="all_articles", show_excerpt=False
-    )
+    headlines = rss_api.get_headlines(feed_id=-1, view_mode="all_articles", show_excerpt=False)
     while headlines:
         listed = 0
         read_list = []
@@ -79,9 +73,7 @@ def unstar_unread(rss_api, args, configuration):
                 feed_title = re.sub(r"(:| - | – | \(.*\)).*", "", head.feed_title)
             else:
                 feed_title = head.feed_title
-            message = (
-                str(head.feed_id) + ": " + feed_title + ": " + head.title + ": " + link
-            )
+            message = str(head.feed_id) + ": " + feed_title + ": " + head.title + ": " + link
             read_list.append(head.id)
             print(message)
             listed = listed + 1
@@ -94,9 +86,7 @@ def unstar_unread(rss_api, args, configuration):
                 read_list = []
                 if unstar == "q":
                     sys.exit()
-        headlines = rss_api.get_headlines(
-            feed_id=-1, view_mode="all_articles", show_excerpt=False
-        )
+        headlines = rss_api.get_headlines(feed_id=-1, view_mode="all_articles", show_excerpt=False)
 
 
 def main():
@@ -117,9 +107,7 @@ def main():
     parser.add_argument(
         "-q", "--quiet", action="store_true", help="Quiet, i.e. catch SSL warnings."
     )
-    parser.add_argument(
-        "-b", "--bitly", action="store_true", help="Shorten urls using Bitly."
-    )
+    parser.add_argument("-b", "--bitly", action="store_true", help="Shorten urls using Bitly.")
     parser.add_argument(
         "-n",
         "--notrack",
@@ -140,7 +128,7 @@ def main():
     if args.quiet:
         logging.captureWarnings(True)
     configuration = newsdedup.read_configuration(args.configFile)
-    rss_api = newsdedup.init_ttrss(configuration)
+    rss_api = newsdedup.init_backend(configuration)
     unstar_unread(rss_api, args, configuration)
 
 
