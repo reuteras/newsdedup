@@ -165,7 +165,8 @@ class MinifluxBackend(RSSBackend):
         if view_mode == "unread":
             kwargs["status"] = "unread"
         elif view_mode == "all_articles":
-            kwargs["status"] = ["read", "unread"]
+            # Use tuple for repeatable query parameters (status=read&status=unread)
+            kwargs["status"] = ("read", "unread")
 
         if since_id:
             kwargs["after_entry_id"] = since_id
