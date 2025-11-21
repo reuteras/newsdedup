@@ -159,8 +159,23 @@ def calculate_similarity(title1, title2, method="token_sort"):
     return fuzz.token_sort_ratio(title1, title2)
 
 
-def learn_last_read(rss, title_queue, url_queue, arguments, config):
-    """Learn from maxcount read articles per feed (not total)."""
+def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cached=True):
+    """Learn from maxcount read articles per feed (not total).
+
+    Args:
+        rss: RSS backend
+        title_queue: Queue to store learned articles
+        url_queue: Queue (unused, for compatibility)
+        arguments: Command line arguments
+        config: Configuration dictionary
+        skip_if_cached: Skip learning if cache is already populated (default True)
+    """
+    # Skip learning if we already have a cached queue (don't re-learn every time)
+    if skip_if_cached and len(title_queue) > 0:
+        if arguments.debug:
+            print_time_message(arguments, f"Debug: Using cached {len(title_queue)} learned articles")
+        return title_queue, url_queue
+
     maxcount_per_feed = int(config.get("newsdedup", {}).get("maxcount", 50))
     feeds = rss.get_feeds()
     total_learned = 0
@@ -174,27 +189,32 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config):
 
         # Learn up to maxcount_per_feed articles from this feed
         while learned_from_feed < maxcount_per_feed:
-            limit = min(maxcount_per_feed - learned_from_feed, DEFAULT_BATCH_SIZE)
-            start_id = feed_batch * DEFAULT_BATCH_SIZE
+            try:
+                limit = min(maxcount_per_feed - learned_from_feed, DEFAULT_BATCH_SIZE)
+                start_id = feed_batch * DEFAULT_BATCH_SIZE
 
-            articles = rss.get_headlines(
-                feed_id=feed.id, view_mode="all_articles", since_id=start_id, limit=limit
-            )
+                articles = rss.get_headlines(
+                    feed_id=feed.id, view_mode="all_articles", since_id=start_id, limit=limit
+                )
 
-            if not articles:
+                if not articles:
+                    break
+
+                for article in articles:
+                    if not article.unread:
+                        title_queue.append(LearnedArticle(
+                            title=article.title,
+                            url=normalize_url(article.link) if hasattr(article, "link") and article.link else "",
+                            feed_id=feed.id
+                        ))
+                        learned_from_feed += 1
+                        total_learned += 1
+
+                feed_batch += 1
+            except Exception as e:  # pylint: disable=broad-except
+                if arguments.debug:
+                    print_time_message(arguments, f"Debug: Skipped '{feed.title}' due to error: {type(e).__name__}")
                 break
-
-            for article in articles:
-                if not article.unread:
-                    title_queue.append(LearnedArticle(
-                        title=article.title,
-                        url=normalize_url(article.link) if hasattr(article, "link") and article.link else "",
-                        feed_id=feed.id
-                    ))
-                    learned_from_feed += 1
-                    total_learned += 1
-
-            feed_batch += 1
 
         if arguments.debug and learned_from_feed > 0:
             print_time_message(arguments, f"Debug: Learned {learned_from_feed} titles from '{feed.title}'")
