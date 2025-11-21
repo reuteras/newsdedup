@@ -1,13 +1,16 @@
 [Unit]
-Description=News dedup for Tiny Tiny RSS.
+Description=Newsdedup - RSS duplicate detection for Miniflux
+Documentation=https://github.com/reuteras/newsdedup
 
 [Service]
-Environment=VIRTUAL_ENV=/home/<username>/<path>/newsdedup/.env
-Environment=PATH=/home/<username>/<path>/src/newsdedup/.env/bin
-ExecStart=/home/<username>/<path>/src/newsdedup/newsdedup.py -D -v -q /home/<username>/<path>/src/newsdedup/newsdedup.cfg
+Type=simple
+WorkingDirectory=/home/<username>/<path>/newsdedup
+ExecStart=/usr/local/bin/uv run newsdedup --daemon --verbose newsdedup.toml
 Restart=always
-RestartSec=10s
-TimeoutSec=0
+RestartSec=30s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=newsdedup
 
 [Install]
 WantedBy=default.target

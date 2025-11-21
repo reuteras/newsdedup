@@ -25,45 +25,69 @@ Or directly with uv:
 
     uv sync
 
+## Configuration
+
+Create a `newsdedup.toml` file in your project directory. Use `newsdedup.toml.example` as a template:
+
+    cp newsdedup.toml.example newsdedup.toml
+    # Edit newsdedup.toml with your Miniflux settings
+
+For **Miniflux**:
+1. Generate an API token in Miniflux Settings > API Keys
+2. Add to your `newsdedup.toml`:
+
+        [miniflux]
+        hostname = "https://miniflux.example.com"
+        api_token = "your-api-token-here"
+
 ## Usage
 
-To run the code as a daemon under systemd you can do the following steps:
+### Command Line
+
+Run newsdedup once to check for duplicates:
+
+    uv run newsdedup
+
+Run with debug output:
+
+    uv run newsdedup --debug
+
+Preview changes without marking articles (dry-run mode):
+
+    uv run newsdedup --dry-run
+
+### Daemon Mode (Continuous Operation)
+
+Run newsdedup continuously with systemd:
 
     mkdir -p ~/.config/systemd/user/
-    cp newsdedup.service.default ~/.config/systemd/user/newsdedup.service
+    cp newsdedup.service ~/.config/systemd/user/newsdedup.service
+
+Edit the service file to point to your configuration file location if needed:
+
+    systemctl --user daemon-reload
     systemctl --user enable newsdedup.service
     systemctl --user start newsdedup.service
 
-To watch the logs you can run:
+To watch the logs:
 
     journalctl -f --user-unit newsdedup
 
-Unmark stared articles from the command-line with:
+To stop the service:
 
-    uv run unstar -b
+    systemctl --user stop newsdedup.service
 
-List all feeds:
+To check the service status:
 
-    uv run list-feeds
-
-Run newsdedup directly:
-
-    uv run newsdedup newsdedup.cfg
+    systemctl --user status newsdedup.service
 
 ## Features
 
-### Multiple Backend Support
+### Miniflux Integration
 
-newsdedup now supports two RSS reader backends:
-- **Tiny Tiny RSS** (default) - The original backend
-- **Miniflux** - Modern, minimalist RSS reader
+newsdedup is designed for [Miniflux](https://miniflux.app/) - a modern, minimalist RSS reader. It uses the official Miniflux API to detect and manage duplicate articles.
 
-To switch backends, edit your `newsdedup.cfg` file:
-
-    [newsdedup]
-    backend=miniflux  # or ttrss
-
-### Enhanced Duplicate Detection
+### Intelligent Duplicate Detection
 
 The duplicate detection has been significantly improved with:
 
@@ -79,29 +103,22 @@ The duplicate detection has been significantly improved with:
     -   Removes tracking parameters automatically
     -   Can be disabled in configuration
 
-Configure in `newsdedup.cfg`:
+Configure in `newsdedup.toml`:
 
     [newsdedup]
-    similarity_method=combined  # Choose your similarity algorithm
-    check_urls=true            # Enable URL-based deduplication
-
-### Configuration
-
-See `newsdedup.cfg.default` for a complete configuration example supporting both backends.
-
-For **Miniflux**:
-1. Generate an API token in Miniflux Settings > API Keys
-2. Add to your config:
-
-        [miniflux]
-        hostname=https://miniflux.example.org
-        api_token=your-api-token-here
+    similarity_method = "combined"  # Choose: token_sort, token_set, jaccard, or combined
+    check_urls = true              # Enable URL-based deduplication
+    ratio = 80                      # Similarity threshold (0-100)
+    maxcount = 50                   # Max articles to learn per feed
+    sleep = 60                      # Sleep time between checks in daemon mode
+    learning_retry_interval = 10    # Force re-learning every N iterations
 
 ## Links
 
-Some of the relevant API:s used in this project.
+Relevant APIs and libraries used in this project:
 
-* [ttrss-python](http://ttrss-python.readthedocs.org/en/latest/)
-* [Tiny Tiny RSS - API Reference](https://tt-rss.org/wiki/ApiReference)
-* [Miniflux - API Documentation](https://miniflux.app/docs/api.html)
-* [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy)
+* [Miniflux - Official Documentation](https://miniflux.app/)
+* [Miniflux - API Reference](https://miniflux.app/docs/api.html)
+* [miniflux-python - Python Client Library](https://github.com/miniflux/python-client)
+* [fuzzywuzzy - Fuzzy String Matching](https://github.com/seatgeek/fuzzywuzzy)
+* [uv - Python Package Manager](https://docs.astral.sh/uv/)

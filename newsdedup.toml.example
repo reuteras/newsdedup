@@ -1,5 +1,18 @@
 # Newsdedup Configuration
 # News deduplication for Miniflux RSS reader
+#
+# Usage:
+#   - Single run: uv run newsdedup
+#   - Daemon mode: uv run newsdedup --daemon
+#   - Debug mode:  uv run newsdedup --debug
+#   - Dry run:     uv run newsdedup --dry-run
+#
+# For systemd setup:
+#   1. Copy newsdedup.service.default to ~/.config/systemd/user/newsdedup.service
+#   2. Edit the service file to point to this config location
+#   3. Run: systemctl --user enable newsdedup.service
+#   4. Run: systemctl --user start newsdedup.service
+#   5. Watch logs: journalctl -f --user-unit newsdedup
 
 [miniflux]
 # Miniflux server URL (e.g., https://miniflux.example.com)
@@ -27,7 +40,13 @@ similarity_method = "combined"
 check_urls = true
 
 # Sleep time between checks (in seconds)
+# Only used when running in daemon mode (--daemon flag)
 sleep = 60
+
+# Retry interval for failed feeds (in iterations)
+# Force re-learning every N iterations to retry feeds that previously timed out
+# Set to a higher value for slower connections or larger feed lists
+learning_retry_interval = 10
 
 # Feed IDs to ignore (comma-separated)
 # Articles from these feeds will be skipped
