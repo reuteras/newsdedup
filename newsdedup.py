@@ -210,15 +210,23 @@ def check_url_duplicate(url_queue, head, arguments):
     return False
 
 
-def handle_known_news(rss, head, nostar_list, arguments):
-    """Mark read and add stare. Might change in the future."""
+def handle_known_news(rss, head, nostar_list, arguments, dry_run=False):
+    """Mark read and add star. Might change in the future."""
+    action = "WOULD MARK" if dry_run else "MARKED"
+
     if str(head.feed_id) in nostar_list:
-        rss.mark_read(head.id)
-        if arguments.verbose:
-            print_time_message(arguments, "### nostar: " + head.feed_title + ": " + head.title)
+        if not dry_run:
+            rss.mark_read(head.id)
+        message = f"[{action} READ] {head.feed_title}: {head.title}"
+        if arguments.verbose or dry_run:
+            print_time_message(arguments, message)
     else:
-        rss.mark_starred(head.id)
-        rss.mark_read(head.id)
+        if not dry_run:
+            rss.mark_starred(head.id)
+            rss.mark_read(head.id)
+        message = f"[{action} READ+STARRED] {head.feed_title}: {head.title}"
+        if dry_run or arguments.verbose:
+            print_time_message(arguments, message)
 
 
 def print_time_message(arguments, message):
@@ -261,6 +269,12 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
             headlines = rss.get_headlines(since_id=start_id, view_mode="unread")
         except Exception:  # pylint: disable=broad-except
             print_time_message(arguments, "Exception when trying to get feeds.")
+
+        if arguments.dry_run:
+            print_time_message(arguments, "=== DRY RUN MODE ===")
+            print_time_message(arguments, f"Found {len(headlines)} unread articles to check.")
+
+        duplicate_count = 0
         for head in headlines:
             start_id = max(start_id, head.id)
             if arguments.verbose:
@@ -280,11 +294,17 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
                     is_duplicate = True
 
                 if is_duplicate:
-                    handle_known_news(rss, head, nostar_list, arguments)
+                    duplicate_count += 1
+                    handle_known_news(rss, head, nostar_list, arguments, dry_run=arguments.dry_run)
 
             title_queue.append(head.title)
             if hasattr(head, "link") and head.link:
                 url_queue.append(normalize_url(head.link))
+
+        if arguments.dry_run:
+            print_time_message(arguments, f"Total duplicates found: {duplicate_count}")
+            print_time_message(arguments, "=== END DRY RUN ===")
+            return
 
         if arguments.debug:
             print_time_message(arguments, "Sleeping.")
@@ -329,6 +349,11 @@ def main():
         "-q", "--quiet", action="store_true", help="Suppress SSL warnings"
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be marked as duplicates without making changes",
+    )
     args = parser.parse_args()
 
     if args.quiet:
