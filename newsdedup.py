@@ -316,12 +316,17 @@ def run(rss_api, title_queue, url_queue, args, configuration):
     while True:
         try:
             monitor_rss(rss_api, title_queue, url_queue, args, configuration)
+            # In dry-run mode, exit after one iteration
+            if args.dry_run:
+                break
         except KeyboardInterrupt:
             sys.exit(1)
         except Exception as error:  # pylint: disable=broad-except
-            print_time_message(args, "Exception in monitor_rss.")
+            print_time_message(args, f"Error in monitor_rss: {type(error).__name__}: {error}")
             if args.debug:
-                print_time_message(args, "Debug: Message: " + str(error))
+                import traceback
+                print_time_message(args, "Debug: Full traceback:")
+                traceback.print_exc()
 
 
 def main():
