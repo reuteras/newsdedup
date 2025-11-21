@@ -243,22 +243,18 @@ def print_time_message(arguments, message):
 
 def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
     """Main function to check new rss posts."""
-    ignore_list = configuration.get("newsdedup", "ignore").split(",")
-    nostar_list = configuration.get("newsdedup", "nostar").split(",")
-    ratio = int(configuration.get("newsdedup", "ratio"))
-    sleeptime = int(configuration.get("newsdedup", "sleep"))
+    newsdedup_config = configuration.get("newsdedup", {})
+
+    ignore_list = newsdedup_config.get("ignore", "").split(",")
+    nostar_list = newsdedup_config.get("nostar", "").split(",")
+    ratio = int(newsdedup_config.get("ratio", 80))
+    sleeptime = int(newsdedup_config.get("sleep", 60))
 
     # Get similarity method from config, default to "combined" for better accuracy
-    try:
-        similarity_method = configuration.get("newsdedup", "similarity_method")
-    except Exception:  # pylint: disable=broad-except
-        similarity_method = "combined"
+    similarity_method = newsdedup_config.get("similarity_method", "combined")
 
     # Get URL deduplication setting from config, default to True
-    try:
-        check_urls = configuration.getboolean("newsdedup", "check_urls")
-    except Exception:  # pylint: disable=broad-except
-        check_urls = True
+    check_urls = newsdedup_config.get("check_urls", True)
 
     headlines = []
 
