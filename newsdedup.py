@@ -294,10 +294,10 @@ def main():
     )
     parser.add_argument(
         "configFile",
-        metavar="newsdedup.cfg",
-        default="newsdedup.cfg",
+        metavar="newsdedup.toml",
+        default="newsdedup.toml",
         nargs="?",
-        help="Configuration file (default: newsdedup.cfg)",
+        help="Configuration file (default: newsdedup.toml)",
     )
     parser.add_argument(
         "-d",

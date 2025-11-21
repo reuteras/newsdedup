@@ -247,9 +247,8 @@ version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "fuzzywuzzy" },
+    { name = "miniflux" },
     { name = "python-levenshtein" },
-    { name = "requests" },
-    { name = "ttrss-python" },
 ]
 
 [package.optional-dependencies]
@@ -257,21 +256,16 @@ dev = [
     { name = "bandit" },
     { name = "ruff" },
 ]
-miniflux = [
-    { name = "miniflux" },
-]
 
 [package.metadata]
 requires-dist = [
-    { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.0" },
+    { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.7" },
     { name = "fuzzywuzzy", specifier = ">=0.18.0" },
-    { name = "miniflux", marker = "extra == 'miniflux'", specifier = ">=0.0.29" },
-    { name = "python-levenshtein", specifier = ">=0.12.0" },
-    { name = "requests", specifier = ">=2.31.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
-    { name = "ttrss-python", git = "https://github.com/Vassius/ttrss-python.git?rev=master" },
+    { name = "miniflux", specifier = ">=0.0.30" },
+    { name = "python-levenshtein", specifier = ">=0.23.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
 ]
-provides-extras = ["miniflux", "dev"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "pygments"
@@ -489,14 +483,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/2a/5f/8418daad5c353300b7661dd8ce2574b0410a6316a8be650a189d5c68d938/stevedore-5.5.0.tar.gz", hash = "sha256:d31496a4f4df9825e1a1e4f1f74d19abb0154aff311c3b376fcc89dae8fccd73", size = 513878, upload-time = "2025-08-25T12:54:26.806Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/80/c5/0c06759b95747882bb50abda18f5fb48c3e9b0fbfc6ebc0e23550b52415d/stevedore-5.5.0-py3-none-any.whl", hash = "sha256:18363d4d268181e8e8452e71a38cd77630f345b2ef6b4a8d5614dac5ee0d18cf", size = 49518, upload-time = "2025-08-25T12:54:25.445Z" },
-]
-
-[[package]]
-name = "ttrss-python"
-version = "0.5"
-source = { git = "https://github.com/Vassius/ttrss-python.git?rev=master#3d2d26dd3b74ee65bce190d15801aae755b1e2db" }
-dependencies = [
-    { name = "requests" },
 ]
 
 [[package]]

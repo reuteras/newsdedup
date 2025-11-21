@@ -59,8 +59,8 @@ target/
 # PIP environment
 .venv/
 
-# Configuration file
-*.cfg
+# User configuration file (keep the template in repo)
+# newsdedup.toml is committed as a template, but users can override it
 
 # lint
 pylint/
