@@ -127,33 +127,52 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
     maxlearn = int(config.get("newsdedup", {}).get("maxcount", 500))
     feeds = rss.get_feeds()
-    start_id = (
-        rss.get_headlines(feed_id=feeds[3].id, view_mode="all_articles", limit=1)[0].id
-        - maxlearn
-        - rss.get_unread_count()
-    )
     learned = 0
 
     if arguments.debug:
-        print_time_message(arguments, "Debug: start_id " + str(start_id) + ".")
+        print_time_message(arguments, f"Debug: Found {len(feeds)} feeds, learning from read articles...")
+
+    # Find a feed with articles to learn from
+    feed_with_articles = None
+    for feed in feeds:
+        headlines = rss.get_headlines(feed_id=feed.id, view_mode="all_articles", limit=1)
+        if headlines:
+            feed_with_articles = feed
+            if arguments.debug:
+                print_time_message(arguments, f"Debug: Using feed '{feed.title}' for learning.")
+            break
+
+    if not feed_with_articles:
+        if arguments.debug:
+            print_time_message(arguments, "Debug: No feeds with articles found, skipping learning phase.")
+        return title_queue, url_queue
+
+    # Learn from the first feed with articles
+    start_id = headlines[0].id - maxlearn - rss.get_unread_count()
+
+    if arguments.debug:
+        print_time_message(arguments, f"Debug: Start ID {start_id}.")
+
     while learned < maxlearn:
-        limit = min(maxlearn, DEFAULT_BATCH_SIZE)
-        headlines = rss.get_headlines(
-            feed_id=feeds[3].id, view_mode="all_articles", since_id=start_id + learned, limit=limit
+        limit = min(maxlearn - learned, DEFAULT_BATCH_SIZE)
+        articles = rss.get_headlines(
+            feed_id=feed_with_articles.id, view_mode="all_articles", since_id=start_id + learned, limit=limit
         )
-        for article in headlines:
+        if not articles:
+            break
+
+        for article in articles:
             if not article.unread:
                 title_queue.append(article.title)
                 if hasattr(article, "link") and article.link:
                     url_queue.append(normalize_url(article.link))
                 learned += 1
+
         if arguments.debug:
-            print_time_message(
-                arguments,
-                "Debug: Learned titles from " + str(learned) + " RSS articles.",
-            )
+            print_time_message(arguments, f"Debug: Learned {learned} titles so far...")
+
     if arguments.verbose:
-        print_time_message(arguments, "Learned titles from " + str(learned) + " RSS articles.")
+        print_time_message(arguments, f"Learned titles from {learned} read articles.")
     return title_queue, url_queue
 
 
