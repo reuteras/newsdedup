@@ -230,6 +230,18 @@ wheels = [
 ]
 
 [[package]]
+name = "miniflux"
+version = "1.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/82/94/ca9edb94f125c95b2f4bdb07a414f133f64484fda4323c94877e81acb1f7/miniflux-1.1.4.tar.gz", hash = "sha256:54571d75bdeb53a347176691b9614da6a2ebb48f787c2850f835a187458784de", size = 11442, upload-time = "2025-05-25T23:40:41.371Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4c/e5/645f8d434aa7a78b6996a951dd295040be2df6135c56c2ead597a73b14a7/miniflux-1.1.4-py3-none-any.whl", hash = "sha256:878ca29d458e1dbb6c219b7eb50ef2754e9d1ab2d454ae8ba0b20c63989924a0", size = 8883, upload-time = "2025-05-25T23:40:39.763Z" },
+]
+
+[[package]]
 name = "newsdedup"
 version = "1.0.0"
 source = { editable = "." }
@@ -246,16 +258,16 @@ dev = [
     { name = "ruff" },
 ]
 miniflux = [
-    { name = "requests" },
+    { name = "miniflux" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.0" },
     { name = "fuzzywuzzy", specifier = ">=0.18.0" },
+    { name = "miniflux", marker = "extra == 'miniflux'", specifier = ">=0.0.29" },
     { name = "python-levenshtein", specifier = ">=0.12.0" },
     { name = "requests", specifier = ">=2.31.0" },
-    { name = "requests", marker = "extra == 'miniflux'", specifier = ">=2.31.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "ttrss-python", git = "https://github.com/Vassius/ttrss-python.git?rev=master" },
 ]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""News dedup for Tiny Tiny RSS."""
+"""News deduplication for Miniflux RSS reader."""
 #
-# Copyright (C) 2015 PR <code@reuteras.se>
+# Copyright (C) 2015-2025 PR <code@reuteras.se>
 
 import argparse
 import configparser
@@ -12,8 +12,6 @@ import time
 from collections import deque
 
 from fuzzywuzzy import fuzz
-from ttrss.client import TTRClient
-from ttrss.exceptions import TTRApiDisabled, TTRAuthFailure, TTRNotLoggedIn
 
 from backends import create_backend
 
@@ -33,36 +31,12 @@ def read_configuration(config_file):
 
 
 def init_backend(config):
-    """Initialize RSS backend (TTRSS or Miniflux)."""
-    # Determine backend type from config, default to ttrss for backward compatibility
+    """Initialize Miniflux RSS backend."""
     try:
-        backend_type = config.get("newsdedup", "backend")
-    except Exception:  # pylint: disable=broad-except
-        backend_type = "ttrss"
-
-    try:
-        return create_backend(backend_type, config)
+        return create_backend(config)
     except Exception as error:  # pylint: disable=broad-except
-        print(f"Could not initialize {backend_type} backend: {error}")
+        print(f"Could not initialize Miniflux backend: {error}")
         sys.exit(1)
-
-
-def init_ttrss(config):
-    """Init Tiny tiny RSS API (deprecated - use init_backend instead)."""
-    try:
-        hostname = config.get("ttrss", "hostname")
-        username = config.get("ttrss", "username")
-        password = config.get("ttrss", "password")
-    except Exception:  # pylint: disable=broad-except
-        print("Could not read needed config parameters.")
-        sys.exit(1)
-    try:
-        client = TTRClient(hostname, username, password, auto_login=False)
-        client.login()
-    except (TTRApiDisabled, TTRNotLoggedIn, TTRAuthFailure) as error:
-        print("Couldn't setup TTRClient: ", error)
-        sys.exit(1)
-    return client
 
 
 def init_title_queue(config):
@@ -300,32 +274,30 @@ def run(rss_api, title_queue, url_queue, args, configuration):
 
 
 def main():
-    """Main function to handle arguments."""
+    """Main function to handle arguments and run deduplication."""
     parser = argparse.ArgumentParser(
         prog="newsdedup",
-        description="""This programs dedups RSS articles handled by
-            Tiny tiny RSS.""",
-        epilog="""Program made by PR, @reuteras on Twitter.
-            If you find a bug please let me know.""",
+        description="Deduplicate RSS articles in Miniflux.",
+        epilog="Report bugs at https://github.com/reuteras/newsdedup/issues",
     )
     parser.add_argument(
         "configFile",
         metavar="newsdedup.cfg",
         default="newsdedup.cfg",
         nargs="?",
-        help="Specify configuration file.",
+        help="Configuration file (default: newsdedup.cfg)",
     )
     parser.add_argument(
         "-d",
         "--debug",
         action="store_true",
-        help="Debug output (separate from verbose).",
+        help="Enable debug output",
     )
-    parser.add_argument("-D", "--daemon", action="store_true", help="Run as daemon.")
+    parser.add_argument("-D", "--daemon", action="store_true", help="Run in daemon mode")
     parser.add_argument(
-        "-q", "--quiet", action="store_true", help="Quiet, i.e. catch SSL warnings."
+        "-q", "--quiet", action="store_true", help="Suppress SSL warnings"
     )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
     if args.quiet:
