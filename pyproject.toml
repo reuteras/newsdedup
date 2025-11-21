@@ -10,14 +10,14 @@ license = {text = "MIT"}
 requires-python = ">=3.11"
 dependencies = [
     "fuzzywuzzy>=0.18.0",
-    "python-Levenshtein>=0.12.0",
-    "miniflux>=0.0.29",
+    "python-Levenshtein>=0.23.0",
+    "miniflux>=0.0.30",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "bandit>=1.7.0",
-    "ruff>=0.1.0",
+    "bandit>=1.7.7",
+    "ruff>=0.5.0",
 ]
 
 [project.scripts]

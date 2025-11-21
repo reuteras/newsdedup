@@ -122,8 +122,13 @@ class MinifluxArticle:
 
 def create_backend(config):
     """Create Miniflux backend from configuration."""
-    hostname = config.get("miniflux", "hostname")
-    api_token = config.get("miniflux", "api_token")
+    miniflux_config = config.get("miniflux", {})
+    hostname = miniflux_config.get("hostname")
+    api_token = miniflux_config.get("api_token")
+
+    if not hostname or not api_token:
+        raise ValueError("Miniflux configuration requires 'hostname' and 'api_token'")
+
     backend = MinifluxBackend(hostname, api_token)
     backend.login()
     return backend

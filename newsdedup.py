@@ -4,12 +4,13 @@
 # Copyright (C) 2015-2025 PR <code@reuteras.se>
 
 import argparse
-import configparser
 import logging
 import re
 import sys
 import time
+import tomllib
 from collections import deque
+from pathlib import Path
 
 from fuzzywuzzy import fuzz
 
@@ -21,12 +22,23 @@ HTTP_OK = 200
 
 
 def read_configuration(config_file):
-    """Read configuration file."""
-    config = configparser.RawConfigParser()
-    config.read(config_file)
-    if not config.sections():
-        print("Can't find configuration file.")
+    """Read TOML configuration file."""
+    config_path = Path(config_file)
+    if not config_path.exists():
+        print(f"Configuration file not found: {config_file}")
         sys.exit(1)
+
+    try:
+        with open(config_path, "rb") as f:
+            config = tomllib.load(f)
+    except Exception as e:
+        print(f"Error reading configuration file: {e}")
+        sys.exit(1)
+
+    if not config:
+        print("Configuration file is empty.")
+        sys.exit(1)
+
     return config
 
 
@@ -41,13 +53,13 @@ def init_backend(config):
 
 def init_title_queue(config):
     """Init deque queue to store handled titles."""
-    maxcount = int(config.get("newsdedup", "maxcount"))
+    maxcount = int(config.get("newsdedup", {}).get("maxcount", 500))
     return deque(maxlen=maxcount)
 
 
 def init_url_queue(config):
     """Init deque queue to store handled URLs."""
-    maxcount = int(config.get("newsdedup", "maxcount"))
+    maxcount = int(config.get("newsdedup", {}).get("maxcount", 500))
     return deque(maxlen=maxcount)
 
 
@@ -113,7 +125,7 @@ def calculate_similarity(title1, title2, method="token_sort"):
 
 def learn_last_read(rss, title_queue, url_queue, arguments, config):
     """Get maxcount of read RSS and add to queue."""
-    maxlearn = int(config.get("newsdedup", "maxcount"))
+    maxlearn = int(config.get("newsdedup", {}).get("maxcount", 500))
     feeds = rss.get_feeds()
     start_id = (
         rss.get_headlines(feed_id=feeds[3].id, view_mode="all_articles", limit=1)[0].id
