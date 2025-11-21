@@ -1,0 +1,58 @@
+---
+## OWASP Dependency-Check GitHub Actions ##
+name: OWASP Dependency Check
+
+# Run weekly on Mondays at 00:00 UTC
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+  security-events: write  # Required for uploading SARIF results
+
+# Set the Job
+jobs:
+  dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code base
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Run OWASP Dependency-Check
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: /opt/jdk
+        with:
+          project: 'newsdedup'
+          path: '.'
+          format: 'HTML,JSON,SARIF'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --scan './**/*.py'
+            --scan './requirements.txt'
+            --scan './pyproject.toml'
+
+      # Upload results as artifacts
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: reports/
+
+      # Upload SARIF file to GitHub Security tab
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: reports/dependency-check-report.sarif
