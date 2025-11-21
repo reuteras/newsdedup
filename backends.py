@@ -169,10 +169,13 @@ class MinifluxBackend(RSSBackend):
         if limit:
             params["limit"] = limit
 
+        # Use feed-specific endpoint if feed_id is provided
         if feed_id and feed_id != -1:
-            params["feed_id"] = feed_id
+            url = f"{self.hostname}/v1/feeds/{feed_id}/entries"
+        else:
+            url = f"{self.hostname}/v1/entries"
 
-        response = self.session.get(f"{self.hostname}/v1/entries", params=params, timeout=10)
+        response = self.session.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
 
