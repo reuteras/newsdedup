@@ -17,7 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 miniflux = [
-    "requests>=2.31.0",
+    "miniflux>=0.0.29",
 ]
 dev = [
     "bandit>=1.7.0",

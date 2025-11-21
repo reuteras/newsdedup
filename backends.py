@@ -9,6 +9,11 @@ import requests
 from ttrss.client import TTRClient
 from ttrss.exceptions import TTRApiDisabled, TTRAuthFailure, TTRNotLoggedIn
 
+try:
+    import miniflux
+except ImportError:
+    miniflux = None
+
 # Constants
 HTTP_OK = 200
 
@@ -122,90 +127,77 @@ class TTRSSBackend(RSSBackend):
 
 
 class MinifluxBackend(RSSBackend):
-    """Miniflux backend implementation."""
+    """Miniflux backend implementation using the official miniflux library."""
 
     def __init__(self, hostname, api_token):
+        if miniflux is None:
+            raise ImportError("miniflux library is required for Miniflux backend. Install with: pip install miniflux")
         self.hostname = hostname.rstrip("/")
         self.api_token = api_token
-        self.session = None
+        self.client = None
 
     def login(self):
         """Authenticate with Miniflux."""
-        self.session = requests.Session()
-        self.session.headers.update({"X-Auth-Token": self.api_token})
-
+        self.client = miniflux.Client(self.hostname, api_key=self.api_token)
         # Test authentication
-        response = self.session.get(f"{self.hostname}/v1/me", timeout=10)
-        if response.status_code != HTTP_OK:
-            raise RuntimeError(f"Miniflux authentication failed: {response.status_code}")
+        try:
+            self.client.me()
+        except Exception as e:
+            raise RuntimeError(f"Miniflux authentication failed: {e}") from e
 
     def get_feeds(self):
         """Get all feeds."""
-        response = self.session.get(f"{self.hostname}/v1/feeds", timeout=10)
-        response.raise_for_status()
-        return [MinifluxFeed(feed) for feed in response.json()]
+        feeds = self.client.get_feeds()
+        return [MinifluxFeed(feed) for feed in feeds]
 
     def get_categories(self):
         """Get all categories."""
-        response = self.session.get(f"{self.hostname}/v1/categories", timeout=10)
-        response.raise_for_status()
-        return [MinifluxCategory(cat) for cat in response.json()]
+        categories = self.client.get_categories()
+        return [MinifluxCategory(cat) for cat in categories]
 
     def get_headlines(
         self, feed_id=None, view_mode="unread", since_id=None, limit=None, show_excerpt=False  # noqa: ARG002
     ):
         """Get entries/headlines."""
         # Note: show_excerpt parameter kept for API compatibility but not used in Miniflux
-        params = {}
+        kwargs = {}
 
         if view_mode == "unread":
-            params["status"] = "unread"
+            kwargs["status"] = "unread"
         elif view_mode == "all_articles":
-            params["status"] = "read,unread"
+            kwargs["status"] = ["read", "unread"]
 
         if since_id:
-            params["after_entry_id"] = since_id
+            kwargs["after_entry_id"] = since_id
 
         if limit:
-            params["limit"] = limit
+            kwargs["limit"] = limit
 
-        # Use feed-specific endpoint if feed_id is provided
         if feed_id and feed_id != -1:
-            url = f"{self.hostname}/v1/feeds/{feed_id}/entries"
-        else:
-            url = f"{self.hostname}/v1/entries"
+            kwargs["feed_id"] = feed_id
 
-        response = self.session.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        return [MinifluxArticle(entry) for entry in data.get("entries", [])]
+        entries = self.client.get_entries(**kwargs)
+        return [MinifluxArticle(entry) for entry in entries]
 
     def get_unread_count(self):
         """Get total unread count."""
-        response = self.session.get(f"{self.hostname}/v1/entries?status=unread&limit=1", timeout=10)
-        response.raise_for_status()
-        return response.json().get("total", 0)
+        entries = self.client.get_entries(status="unread", limit=1)
+        # The client returns a list, check if there's a total_unread in the response metadata
+        # Fallback: count the unread entries manually
+        all_unread = self.client.get_entries(status="unread", limit=1000)
+        return len(all_unread) if all_unread else 0
 
     def mark_read(self, article_id):
         """Mark an article as read."""
-        response = self.session.put(
-            f"{self.hostname}/v1/entries",
-            json={"entry_ids": [article_id], "status": "read"},
-            timeout=10,
-        )
-        response.raise_for_status()
+        self.client.update_entries([article_id], status="read")
 
     def mark_starred(self, article_id):
         """Star/bookmark an article."""
-        response = self.session.put(f"{self.hostname}/v1/entries/{article_id}/bookmark", timeout=10)
-        response.raise_for_status()
+        self.client.toggle_bookmark(article_id)
 
     def toggle_starred(self, article_id):
         """Toggle star/bookmark status."""
-        # Miniflux uses PUT to toggle bookmark
-        response = self.session.put(f"{self.hostname}/v1/entries/{article_id}/bookmark", timeout=10)
-        response.raise_for_status()
+        self.client.toggle_bookmark(article_id)
 
 
 class MinifluxFeed:
