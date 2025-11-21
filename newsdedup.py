@@ -142,7 +142,7 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config):
     maxlearn = int(config.get("newsdedup", "maxcount"))
     feeds = rss.get_feeds()
     start_id = (
-        feeds[3].headlines(view_mode="all_articles", limit=1)[0].id
+        rss.get_headlines(feed_id=feeds[3].id, view_mode="all_articles", limit=1)[0].id
         - maxlearn
         - rss.get_unread_count()
     )
@@ -152,8 +152,8 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config):
         print_time_message(arguments, "Debug: start_id " + str(start_id) + ".")
     while learned < maxlearn:
         limit = min(maxlearn, DEFAULT_BATCH_SIZE)
-        headlines = feeds[3].headlines(
-            view_mode="all_articles", since_id=start_id + learned, limit=limit
+        headlines = rss.get_headlines(
+            feed_id=feeds[3].id, view_mode="all_articles", since_id=start_id + learned, limit=limit
         )
         for article in headlines:
             if not article.unread:
