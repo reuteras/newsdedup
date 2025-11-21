@@ -52,6 +52,28 @@ def read_configuration(config_file):
     return config
 
 
+def load_state(state_file=".newsdedup_state"):
+    """Load the last processed article ID from state file."""
+    state_path = Path(state_file)
+    if state_path.exists():
+        try:
+            with open(state_path) as f:
+                last_id = int(f.read().strip())
+                return last_id
+        except Exception:  # pylint: disable=broad-except
+            pass
+    return 0
+
+
+def save_state(last_id, state_file=".newsdedup_state"):
+    """Save the last processed article ID to state file."""
+    try:
+        with open(state_file, "w") as f:
+            f.write(str(last_id))
+    except Exception as e:  # pylint: disable=broad-except
+        print(f"Warning: Could not save state: {e}")
+
+
 def init_backend(config):
     """Initialize Miniflux RSS backend."""
     try:
@@ -63,14 +85,18 @@ def init_backend(config):
 
 def init_title_queue(config):
     """Init deque queue to store handled titles."""
-    maxcount = int(config.get("newsdedup", {}).get("maxcount", 500))
-    return deque(maxlen=maxcount)
+    # maxcount is per-feed, estimate total as maxcount * 100 feeds or minimum of 5000
+    maxcount_per_feed = int(config.get("newsdedup", {}).get("maxcount", 50))
+    total_maxlen = max(5000, maxcount_per_feed * 100)
+    return deque(maxlen=total_maxlen)
 
 
 def init_url_queue(config):
     """Init deque queue to store handled URLs."""
-    maxcount = int(config.get("newsdedup", {}).get("maxcount", 500))
-    return deque(maxlen=maxcount)
+    # Same as title queue - bounded to prevent unbounded growth
+    maxcount_per_feed = int(config.get("newsdedup", {}).get("maxcount", 50))
+    total_maxlen = max(5000, maxcount_per_feed * 100)
+    return deque(maxlen=total_maxlen)
 
 
 def normalize_url(url):
@@ -276,8 +302,20 @@ def print_time_message(arguments, message):
             print("Debug: Error in print_time_message: ", str(error))
 
 
-def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
-    """Main function to check new rss posts."""
+def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_state=0):
+    """Main function to check new rss posts.
+
+    Args:
+        rss: RSS backend
+        title_queue: Queue of learned article titles
+        url_queue: Queue of learned article URLs (unused, kept for compatibility)
+        arguments: Command line arguments
+        configuration: Configuration dictionary
+        saved_state: Last processed article ID (for resuming)
+
+    Returns:
+        Last processed article ID (to be saved as state)
+    """
     newsdedup_config = configuration.get("newsdedup", {})
 
     ignore_list = newsdedup_config.get("ignore", "").split(",")
@@ -298,7 +336,11 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
 
     headlines = []
 
-    start_id = rss.get_headlines(view_mode="all_articles", limit=1)[0].id - rss.get_unread_count()
+    # Use saved state if available, otherwise get latest
+    if saved_state > 0:
+        start_id = saved_state
+    else:
+        start_id = rss.get_headlines(view_mode="all_articles", limit=1)[0].id - rss.get_unread_count()
 
     while True:
         try:
@@ -343,23 +385,38 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
         if arguments.dry_run:
             print_time_message(arguments, f"Total duplicates found: {duplicate_count}")
             print_time_message(arguments, "=== END DRY RUN ===")
-            return
+            return start_id
 
         if arguments.debug:
             print_time_message(arguments, "Sleeping.")
         time.sleep(sleeptime)
 
+    return start_id
+
 
 def run(rss_api, title_queue, url_queue, args, configuration):
     """Main loop."""
+    # Load saved state
+    last_id = load_state()
+    if args.debug and last_id > 0:
+        print_time_message(args, f"Debug: Resuming from article ID {last_id}")
+
     while True:
         try:
-            monitor_rss(rss_api, title_queue, url_queue, args, configuration)
+            last_id = monitor_rss(rss_api, title_queue, url_queue, args, configuration, saved_state=last_id)
+            # Save state after successful run
+            save_state(last_id)
+
             # In dry-run mode, exit after one iteration
             if args.dry_run:
                 break
+
+            # In daemon mode, continue looping (monitor_rss handles sleep)
+            # In non-daemon mode, exit after one iteration
+            if not args.daemon:
+                break
         except KeyboardInterrupt:
-            sys.exit(1)
+            sys.exit(0)
         except Exception as error:  # pylint: disable=broad-except
             print_time_message(args, f"Error in monitor_rss: {type(error).__name__}: {error}")
             if args.debug:
