@@ -57,7 +57,7 @@ target/
 .venv/
 
 # Configuration files
-newsdedup.toml         # User's actual config (not tracked)
+newsdedup.toml
 
 # State file
 .newsdedup_state
