@@ -176,16 +176,16 @@ class MinifluxBackend(RSSBackend):
         if feed_id and feed_id != -1:
             kwargs["feed_id"] = feed_id
 
-        entries = self.client.get_entries(**kwargs)
+        response = self.client.get_entries(**kwargs)
+        # get_entries returns a dict with "entries" key
+        entries = response.get("entries", []) if isinstance(response, dict) else response
         return [MinifluxArticle(entry) for entry in entries]
 
     def get_unread_count(self):
         """Get total unread count."""
-        entries = self.client.get_entries(status="unread", limit=1)
-        # The client returns a list, check if there's a total_unread in the response metadata
-        # Fallback: count the unread entries manually
-        all_unread = self.client.get_entries(status="unread", limit=1000)
-        return len(all_unread) if all_unread else 0
+        response = self.client.get_entries(status="unread", limit=1)
+        # get_entries returns a dict with "total" key containing total count
+        return response.get("total", 0) if isinstance(response, dict) else 0
 
     def mark_read(self, article_id):
         """Mark an article as read."""
