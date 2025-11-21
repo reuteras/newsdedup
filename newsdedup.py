@@ -159,7 +159,7 @@ def calculate_similarity(title1, title2, method="token_sort"):
     return fuzz.token_sort_ratio(title1, title2)
 
 
-def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cached=True):
+def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cached=True, force_relearn=False):
     """Learn from maxcount read articles per feed (not total).
 
     Args:
@@ -169,12 +169,20 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cach
         arguments: Command line arguments
         config: Configuration dictionary
         skip_if_cached: Skip learning if cache is already populated (default True)
+        force_relearn: Force re-learning regardless of cache (default False)
     """
     # Skip learning if we already have a cached queue (don't re-learn every time)
-    if skip_if_cached and len(title_queue) > 0:
+    # unless force_relearn is True (for periodic retries of failed feeds)
+    if not force_relearn and skip_if_cached and len(title_queue) > 0:
         if arguments.debug:
             print_time_message(arguments, f"Debug: Using cached {len(title_queue)} learned articles")
         return title_queue, url_queue
+
+    # If force re-learning, clear the queue to rebuild it
+    if force_relearn and len(title_queue) > 0:
+        if arguments.debug:
+            print_time_message(arguments, "Debug: Force re-learning to retry failed feeds...")
+        title_queue.clear()
 
     maxcount_per_feed = int(config.get("newsdedup", {}).get("maxcount", 50))
     feeds = rss.get_feeds()
@@ -421,8 +429,19 @@ def run(rss_api, title_queue, url_queue, args, configuration):
     if args.debug and last_id > 0:
         print_time_message(args, f"Debug: Resuming from article ID {last_id}")
 
+    # Get retry interval from config (default: retry every 10 iterations)
+    newsdedup_config = configuration.get("newsdedup", {})
+    retry_interval = int(newsdedup_config.get("learning_retry_interval", 10))
+    iteration_count = 0
+
     while True:
         try:
+            iteration_count += 1
+
+            # Force re-learn every retry_interval iterations to retry failed feeds
+            force_relearn = (iteration_count % retry_interval == 0) and iteration_count > 0
+
+            title_queue, url_queue = learn_last_read(rss_api, title_queue, url_queue, args, configuration, force_relearn=force_relearn)
             last_id = monitor_rss(rss_api, title_queue, url_queue, args, configuration, saved_state=last_id)
             # Save state after successful run
             save_state(last_id)
@@ -483,7 +502,6 @@ def main():
     rss_api = init_backend(configuration)
     title_queue = init_title_queue(configuration)
     url_queue = init_url_queue(configuration)
-    learn_last_read(rss_api, title_queue, url_queue, args, configuration)
 
     run(rss_api, title_queue, url_queue, args, configuration)
 

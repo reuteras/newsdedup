@@ -61,7 +61,10 @@ target/
 
 # Configuration files
 newsdedup.toml         # User's actual config (not tracked)
-# newsdedup.toml.example is the template (tracked for reference)
+
+# State file
+.newsdedup_state
+
 
 # lint
 pylint/
