@@ -21,6 +21,16 @@ DEFAULT_BATCH_SIZE = 200
 HTTP_OK = 200
 
 
+class LearnedArticle:
+    """Store metadata about learned articles for comparison."""
+
+    def __init__(self, title, url, feed_id):
+        """Initialize learned article."""
+        self.title = title
+        self.url = url
+        self.feed_id = feed_id
+
+
 def read_configuration(config_file):
     """Read TOML configuration file."""
     config_path = Path(config_file)
@@ -124,65 +134,74 @@ def calculate_similarity(title1, title2, method="token_sort"):
 
 
 def learn_last_read(rss, title_queue, url_queue, arguments, config):
-    """Get maxcount of read RSS and add to queue."""
-    maxlearn = int(config.get("newsdedup", {}).get("maxcount", 500))
+    """Learn from maxcount read articles per feed (not total)."""
+    maxcount_per_feed = int(config.get("newsdedup", {}).get("maxcount", 50))
     feeds = rss.get_feeds()
-    learned = 0
+    total_learned = 0
 
     if arguments.debug:
-        print_time_message(arguments, f"Debug: Found {len(feeds)} feeds, learning from read articles...")
+        print_time_message(arguments, f"Debug: Found {len(feeds)} feeds, learning {maxcount_per_feed} articles per feed...")
 
-    # Find a feed with articles to learn from
-    feed_with_articles = None
     for feed in feeds:
-        headlines = rss.get_headlines(feed_id=feed.id, view_mode="all_articles", limit=1)
-        if headlines:
-            feed_with_articles = feed
-            if arguments.debug:
-                print_time_message(arguments, f"Debug: Using feed '{feed.title}' for learning.")
-            break
+        learned_from_feed = 0
+        feed_batch = 0
 
-    if not feed_with_articles:
-        if arguments.debug:
-            print_time_message(arguments, "Debug: No feeds with articles found, skipping learning phase.")
-        return title_queue, url_queue
+        # Learn up to maxcount_per_feed articles from this feed
+        while learned_from_feed < maxcount_per_feed:
+            limit = min(maxcount_per_feed - learned_from_feed, DEFAULT_BATCH_SIZE)
+            start_id = feed_batch * DEFAULT_BATCH_SIZE
 
-    # Learn from the first feed with articles
-    start_id = headlines[0].id - maxlearn - rss.get_unread_count()
+            articles = rss.get_headlines(
+                feed_id=feed.id, view_mode="all_articles", since_id=start_id, limit=limit
+            )
 
-    if arguments.debug:
-        print_time_message(arguments, f"Debug: Start ID {start_id}.")
+            if not articles:
+                break
 
-    while learned < maxlearn:
-        limit = min(maxlearn - learned, DEFAULT_BATCH_SIZE)
-        articles = rss.get_headlines(
-            feed_id=feed_with_articles.id, view_mode="all_articles", since_id=start_id + learned, limit=limit
-        )
-        if not articles:
-            break
+            for article in articles:
+                if not article.unread:
+                    title_queue.append(LearnedArticle(
+                        title=article.title,
+                        url=normalize_url(article.link) if hasattr(article, "link") and article.link else "",
+                        feed_id=feed.id
+                    ))
+                    learned_from_feed += 1
+                    total_learned += 1
 
-        for article in articles:
-            if not article.unread:
-                title_queue.append(article.title)
-                if hasattr(article, "link") and article.link:
-                    url_queue.append(normalize_url(article.link))
-                learned += 1
+            feed_batch += 1
 
-        if arguments.debug:
-            print_time_message(arguments, f"Debug: Learned {learned} titles so far...")
+        if arguments.debug and learned_from_feed > 0:
+            print_time_message(arguments, f"Debug: Learned {learned_from_feed} titles from '{feed.title}'")
 
     if arguments.verbose:
-        print_time_message(arguments, f"Learned titles from {learned} read articles.")
+        print_time_message(arguments, f"Learned titles from {total_learned} read articles across all feeds.")
     return title_queue, url_queue
 
 
-def compare_to_queue(queue, head, ratio, arguments, similarity_method="token_sort"):
-    """Compare current title to all in queue."""
+def compare_to_queue(queue, head, ratio, arguments, similarity_method="token_sort", internal_only_feeds=None, feed_id=None):
+    """Compare current title to all in queue.
+
+    Args:
+        queue: List of LearnedArticle objects
+        head: Current article to check
+        ratio: Similarity threshold
+        arguments: Command line arguments
+        similarity_method: Method for similarity calculation
+        internal_only_feeds: Set of feed IDs that should only compare internally
+        feed_id: Current article's feed ID
+    """
+    if internal_only_feeds is None:
+        internal_only_feeds = set()
+
     for item in queue:
-        similarity = calculate_similarity(item, head.title, similarity_method)
+        # If current feed is internal-only, skip articles from other feeds
+        if feed_id in internal_only_feeds and item.feed_id != feed_id:
+            continue
+
+        similarity = calculate_similarity(item.title, head.title, similarity_method)
         if similarity > ratio:
             if arguments.verbose:
-                print_time_message(arguments, "### Old title: " + item)
+                print_time_message(arguments, "### Old title: " + item.title)
                 print_time_message(arguments, "### New: " + head.feed_title + ": " + head.title)
                 print_time_message(
                     arguments,
@@ -192,20 +211,36 @@ def compare_to_queue(queue, head, ratio, arguments, similarity_method="token_sor
     return 0
 
 
-def check_url_duplicate(url_queue, head, arguments):
-    """Check if URL is already seen (duplicate)."""
+def check_url_duplicate(url_queue, head, arguments, internal_only_feeds=None, feed_id=None):
+    """Check if URL is already seen (duplicate).
+
+    Args:
+        url_queue: List of LearnedArticle objects
+        head: Current article to check
+        arguments: Command line arguments
+        internal_only_feeds: Set of feed IDs that should only compare internally
+        feed_id: Current article's feed ID
+    """
     if not hasattr(head, "link") or not head.link:
         return False
 
+    if internal_only_feeds is None:
+        internal_only_feeds = set()
+
     normalized_url = normalize_url(head.link)
 
-    if normalized_url in url_queue:
-        if arguments.verbose:
-            print_time_message(
-                arguments, f"### URL duplicate found: {head.feed_title}: {head.title}"
-            )
-            print_time_message(arguments, f"### URL: {normalized_url}")
-        return True
+    for item in url_queue:
+        # If current feed is internal-only, skip articles from other feeds
+        if feed_id in internal_only_feeds and item.feed_id != feed_id:
+            continue
+
+        if normalized_url == item.url:
+            if arguments.verbose:
+                print_time_message(
+                    arguments, f"### URL duplicate found: {head.feed_title}: {head.title}"
+                )
+                print_time_message(arguments, f"### URL: {normalized_url}")
+            return True
 
     return False
 
@@ -256,6 +291,11 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
     # Get URL deduplication setting from config, default to True
     check_urls = newsdedup_config.get("check_urls", True)
 
+    # Get feeds that should only compare internally
+    feeds_config = configuration.get("feeds", {})
+    internal_only_list = feeds_config.get("internal_only", [])
+    internal_only_feeds = set(internal_only_list) if internal_only_list else set()
+
     headlines = []
 
     start_id = rss.get_headlines(view_mode="all_articles", limit=1)[0].id - rss.get_unread_count()
@@ -279,13 +319,13 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
                 is_duplicate = False
 
                 # Check URL-based duplication first
-                if check_urls and check_url_duplicate(url_queue, head, arguments):
+                if check_urls and check_url_duplicate(title_queue, head, arguments, internal_only_feeds, head.feed_id):
                     is_duplicate = True
 
                 # Then check title-based duplication
                 if (
                     not is_duplicate
-                    and compare_to_queue(title_queue, head, ratio, arguments, similarity_method) > 0
+                    and compare_to_queue(title_queue, head, ratio, arguments, similarity_method, internal_only_feeds, head.feed_id) > 0
                 ):
                     is_duplicate = True
 
@@ -293,9 +333,12 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration):
                     duplicate_count += 1
                     handle_known_news(rss, head, nostar_list, arguments, dry_run=arguments.dry_run)
 
-            title_queue.append(head.title)
-            if hasattr(head, "link") and head.link:
-                url_queue.append(normalize_url(head.link))
+            # Add current article to learned queue for future comparisons
+            title_queue.append(LearnedArticle(
+                title=head.title,
+                url=normalize_url(head.link) if hasattr(head, "link") and head.link else "",
+                feed_id=head.feed_id
+            ))
 
         if arguments.dry_run:
             print_time_message(arguments, f"Total duplicates found: {duplicate_count}")

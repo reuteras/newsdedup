@@ -9,15 +9,36 @@ hostname = "https://miniflux.example.com"
 api_token = "your-api-token-here"
 
 [newsdedup]
-# Maximum number of articles to learn from
-# How many recent read articles to check when learning existing titles
-maxcount = 500
+# Maximum number of articles to learn from PER FEED
+# For each feed, learn up to this many read articles (not total)
+# Example: 50 articles per feed × 100 feeds = 5000 total learned articles
+maxcount = 50
 
 # Similarity threshold for duplicate detection (0-100)
 # Articles with similarity >= this value are marked as duplicates
-similarity_threshold = 80
+ratio = 80
 
 # Similarity calculation method
 # Options: "token_sort", "token_set", "jaccard", or "combined"
 # "combined" uses all methods and takes the highest score
 similarity_method = "combined"
+
+# Check URLs for exact duplicates (before title similarity)
+check_urls = true
+
+# Sleep time between checks (in seconds)
+sleep = 60
+
+# Feed IDs to ignore (comma-separated)
+# Articles from these feeds will be skipped
+ignore = ""
+
+# Feed IDs to not star (comma-separated)
+# Articles from these feeds will only be marked read, not starred
+nostar = ""
+
+[feeds]
+# Feed IDs that should only compare against articles from the same feed
+# Use this for feeds that have similar content but shouldn't be deduped cross-feed
+# Example: internal_only = [123, 456]
+internal_only = []
