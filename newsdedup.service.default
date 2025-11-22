@@ -5,12 +5,14 @@ Documentation=https://github.com/reuteras/newsdedup
 [Service]
 Type=simple
 WorkingDirectory=/home/<username>/<path>/newsdedup
+Environment="PYTHONUNBUFFERED=1"
 ExecStart=/usr/local/bin/uv run newsdedup --daemon --verbose newsdedup.toml
 Restart=always
 RestartSec=30s
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=newsdedup
+TimeoutStopSec=30s
 
 [Install]
 WantedBy=default.target

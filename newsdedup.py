@@ -35,18 +35,18 @@ def read_configuration(config_file):
     """Read TOML configuration file."""
     config_path = Path(config_file)
     if not config_path.exists():
-        print(f"Configuration file not found: {config_file}")
+        print(f"Configuration file not found: {config_file}", flush=True)
         sys.exit(1)
 
     try:
         with open(config_path, "rb") as f:
             config = tomllib.load(f)
     except Exception as e:
-        print(f"Error reading configuration file: {e}")
+        print(f"Error reading configuration file: {e}", flush=True)
         sys.exit(1)
 
     if not config:
-        print("Configuration file is empty.")
+        print("Configuration file is empty.", flush=True)
         sys.exit(1)
 
     return config
@@ -71,7 +71,7 @@ def save_state(last_id, state_file=".newsdedup_state"):
         with open(state_file, "w") as f:
             f.write(str(last_id))
     except Exception as e:  # pylint: disable=broad-except
-        print(f"Warning: Could not save state: {e}")
+        print(f"Warning: Could not save state: {e}", flush=True)
 
 
 def init_backend(config):
@@ -79,7 +79,7 @@ def init_backend(config):
     try:
         return create_backend(config)
     except Exception as error:  # pylint: disable=broad-except
-        print(f"Could not initialize Miniflux backend: {error}")
+        print(f"Could not initialize Miniflux backend: {error}", flush=True)
         sys.exit(1)
 
 
@@ -322,12 +322,12 @@ def print_time_message(arguments, message):
     """Print time and message."""
     try:
         if arguments.daemon:
-            print(message)
+            print(message, flush=True)
         else:
-            print(time.strftime("%Y-%m-%d %H:%M:%S:", time.gmtime()), message)
+            print(time.strftime("%Y-%m-%d %H:%M:%S:", time.gmtime()), message, flush=True)
     except Exception as error:  # pylint: disable=broad-except
         if arguments.debug:
-            print("Debug: Error in print_time_message: ", str(error))
+            print("Debug: Error in print_time_message: ", str(error), flush=True)
 
 
 def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_state=0):
