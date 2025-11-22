@@ -498,10 +498,14 @@ def main():
 
     if args.quiet:
         logging.captureWarnings(True)
+    print("Starting newsdedup...", flush=True)
     configuration = read_configuration(args.configFile)
+    print("Configuration loaded", flush=True)
     rss_api = init_backend(configuration)
+    print("Miniflux backend initialized", flush=True)
     title_queue = init_title_queue(configuration)
     url_queue = init_url_queue(configuration)
+    print("Queues initialized, starting main loop", flush=True)
 
     run(rss_api, title_queue, url_queue, args, configuration)
 
