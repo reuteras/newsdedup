@@ -159,7 +159,9 @@ def calculate_similarity(title1, title2, method="token_sort"):
     return fuzz.token_sort_ratio(title1, title2)
 
 
-def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cached=True, force_relearn=False):
+def learn_last_read(
+    rss, title_queue, url_queue, arguments, config, skip_if_cached=True, force_relearn=False
+):
     """Learn from maxcount read articles per feed (not total).
 
     Args:
@@ -175,7 +177,9 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cach
     # unless force_relearn is True (for periodic retries of failed feeds)
     if not force_relearn and skip_if_cached and len(title_queue) > 0:
         if arguments.debug:
-            print_time_message(arguments, f"Debug: Using cached {len(title_queue)} learned articles")
+            print_time_message(
+                arguments, f"Debug: Using cached {len(title_queue)} learned articles"
+            )
         return title_queue, url_queue
 
     # If force re-learning, clear the queue to rebuild it
@@ -189,7 +193,10 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cach
     total_learned = 0
 
     if arguments.debug:
-        print_time_message(arguments, f"Debug: Found {len(feeds)} feeds, learning {maxcount_per_feed} articles per feed...")
+        print_time_message(
+            arguments,
+            f"Debug: Found {len(feeds)} feeds, learning {maxcount_per_feed} articles per feed...",
+        )
 
     for feed in feeds:
         learned_from_feed = 0
@@ -210,29 +217,47 @@ def learn_last_read(rss, title_queue, url_queue, arguments, config, skip_if_cach
 
                 for article in articles:
                     if not article.unread:
-                        title_queue.append(LearnedArticle(
-                            title=article.title,
-                            url=normalize_url(article.link) if hasattr(article, "link") and article.link else "",
-                            feed_id=feed.id
-                        ))
+                        title_queue.append(
+                            LearnedArticle(
+                                title=article.title,
+                                url=normalize_url(article.link)
+                                if hasattr(article, "link") and article.link
+                                else "",
+                                feed_id=feed.id,
+                            )
+                        )
                         learned_from_feed += 1
                         total_learned += 1
 
                 feed_batch += 1
             except Exception as e:  # pylint: disable=broad-except
                 if arguments.debug:
-                    print_time_message(arguments, f"Debug: Skipped '{feed.title}' due to error: {type(e).__name__}")
+                    print_time_message(
+                        arguments, f"Debug: Skipped '{feed.title}' due to error: {type(e).__name__}"
+                    )
                 break
 
         if arguments.debug and learned_from_feed > 0:
-            print_time_message(arguments, f"Debug: Learned {learned_from_feed} titles from '{feed.title}'")
+            print_time_message(
+                arguments, f"Debug: Learned {learned_from_feed} titles from '{feed.title}'"
+            )
 
     if arguments.verbose:
-        print_time_message(arguments, f"Learned titles from {total_learned} read articles across all feeds.")
+        print_time_message(
+            arguments, f"Learned titles from {total_learned} read articles across all feeds."
+        )
     return title_queue, url_queue
 
 
-def compare_to_queue(queue, head, ratio, arguments, similarity_method="token_sort", internal_only_feeds=None, feed_id=None):
+def compare_to_queue(
+    queue,
+    head,
+    ratio,
+    arguments,
+    similarity_method="token_sort",
+    internal_only_feeds=None,
+    feed_id=None,
+):
     """Compare current title to all in queue.
 
     Args:
@@ -368,7 +393,9 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
     if saved_state > 0:
         start_id = saved_state
     else:
-        start_id = rss.get_headlines(view_mode="all_articles", limit=1)[0].id - rss.get_unread_count()
+        start_id = (
+            rss.get_headlines(view_mode="all_articles", limit=1)[0].id - rss.get_unread_count()
+        )
 
     while True:
         try:
@@ -389,13 +416,24 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
                 is_duplicate = False
 
                 # Check URL-based duplication first
-                if check_urls and check_url_duplicate(title_queue, head, arguments, internal_only_feeds, head.feed_id):
+                if check_urls and check_url_duplicate(
+                    title_queue, head, arguments, internal_only_feeds, head.feed_id
+                ):
                     is_duplicate = True
 
                 # Then check title-based duplication
                 if (
                     not is_duplicate
-                    and compare_to_queue(title_queue, head, ratio, arguments, similarity_method, internal_only_feeds, head.feed_id) > 0
+                    and compare_to_queue(
+                        title_queue,
+                        head,
+                        ratio,
+                        arguments,
+                        similarity_method,
+                        internal_only_feeds,
+                        head.feed_id,
+                    )
+                    > 0
                 ):
                     is_duplicate = True
 
@@ -404,11 +442,13 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
                     handle_known_news(rss, head, nostar_list, arguments, dry_run=arguments.dry_run)
 
             # Add current article to learned queue for future comparisons
-            title_queue.append(LearnedArticle(
-                title=head.title,
-                url=normalize_url(head.link) if hasattr(head, "link") and head.link else "",
-                feed_id=head.feed_id
-            ))
+            title_queue.append(
+                LearnedArticle(
+                    title=head.title,
+                    url=normalize_url(head.link) if hasattr(head, "link") and head.link else "",
+                    feed_id=head.feed_id,
+                )
+            )
 
         if arguments.dry_run:
             print_time_message(arguments, f"Total duplicates found: {duplicate_count}")
@@ -441,8 +481,12 @@ def run(rss_api, title_queue, url_queue, args, configuration):
             # Force re-learn every retry_interval iterations to retry failed feeds
             force_relearn = (iteration_count % retry_interval == 0) and iteration_count > 0
 
-            title_queue, url_queue = learn_last_read(rss_api, title_queue, url_queue, args, configuration, force_relearn=force_relearn)
-            last_id = monitor_rss(rss_api, title_queue, url_queue, args, configuration, saved_state=last_id)
+            title_queue, url_queue = learn_last_read(
+                rss_api, title_queue, url_queue, args, configuration, force_relearn=force_relearn
+            )
+            last_id = monitor_rss(
+                rss_api, title_queue, url_queue, args, configuration, saved_state=last_id
+            )
             # Save state after successful run
             save_state(last_id)
 
@@ -460,6 +504,7 @@ def run(rss_api, title_queue, url_queue, args, configuration):
             print_time_message(args, f"Error in monitor_rss: {type(error).__name__}: {error}")
             if args.debug:
                 import traceback
+
                 print_time_message(args, "Debug: Full traceback:")
                 traceback.print_exc()
 
@@ -485,9 +530,7 @@ def main():
         help="Enable debug output",
     )
     parser.add_argument("-D", "--daemon", action="store_true", help="Run in daemon mode")
-    parser.add_argument(
-        "-q", "--quiet", action="store_true", help="Suppress SSL warnings"
-    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="Suppress SSL warnings")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
     parser.add_argument(
         "--dry-run",

@@ -14,7 +14,9 @@ class MinifluxBackend:
 
     def __init__(self, hostname, api_token):
         if miniflux is None:
-            raise ImportError("miniflux library is required for Miniflux backend. Install with: pip install miniflux")
+            raise ImportError(
+                "miniflux library is required for Miniflux backend. Install with: pip install miniflux"
+            )
         self.hostname = hostname.rstrip("/")
         self.api_token = api_token
         self.client = None
@@ -39,7 +41,12 @@ class MinifluxBackend:
         return [MinifluxCategory(cat) for cat in categories]
 
     def get_headlines(
-        self, feed_id=None, view_mode="unread", since_id=None, limit=None, show_excerpt=False  # noqa: ARG002
+        self,
+        feed_id=None,
+        view_mode="unread",
+        since_id=None,
+        limit=None,
+        show_excerpt=False,  # noqa: ARG002
     ):
         """Get entries/headlines."""
         # Note: show_excerpt parameter kept for API compatibility but not used in Miniflux
