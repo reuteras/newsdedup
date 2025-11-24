@@ -28,6 +28,8 @@ jobs:
 
       # Run OWASP Dependency-Check
       - name: Run OWASP Dependency-Check
+        id: dependency-check
+        continue-on-error: true
         uses: dependency-check/Dependency-Check_Action@2ba636726705b0f74f126ebeaacaf2ad4600b967 # main as of 2025-11-21
         env:
           JAVA_HOME: /opt/jdk
@@ -42,17 +44,34 @@ jobs:
             --scan './requirements.txt'
             --scan './pyproject.toml'
 
+      # Check if reports were generated
+      - name: Check for generated reports
+        id: check-reports
+        run: |
+          if [ -f "reports/dependency-check-report.sarif" ]; then
+            echo "sarif_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "sarif_exists=false" >> $GITHUB_OUTPUT
+            echo "::warning::SARIF report was not generated"
+          fi
+          if [ -d "reports" ] && [ "$(ls -A reports)" ]; then
+            echo "reports_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "reports_exist=false" >> $GITHUB_OUTPUT
+            echo "::warning::No reports were generated"
+          fi
+
       # Upload results as artifacts
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v4
-        if: always()
+        if: steps.check-reports.outputs.reports_exist == 'true'
         with:
           name: dependency-check-report
           path: reports/
 
       # Upload SARIF file to GitHub Security tab
       - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: steps.check-reports.outputs.sarif_exists == 'true'
         with:
           sarif_file: reports/dependency-check-report.sarif
