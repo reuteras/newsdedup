@@ -49,15 +49,15 @@ jobs:
         id: check-reports
         run: |
           if [ -f "reports/dependency-check-report.sarif" ]; then
-            echo "sarif_exists=true" >> $GITHUB_OUTPUT
+            echo "sarif_exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "sarif_exists=false" >> $GITHUB_OUTPUT
+            echo "sarif_exists=false" >> "$GITHUB_OUTPUT"
             echo "::warning::SARIF report was not generated"
           fi
           if [ -d "reports" ] && [ "$(ls -A reports)" ]; then
-            echo "reports_exist=true" >> $GITHUB_OUTPUT
+            echo "reports_exist=true" >> "$GITHUB_OUTPUT"
           else
-            echo "reports_exist=false" >> $GITHUB_OUTPUT
+            echo "reports_exist=false" >> "$GITHUB_OUTPUT"
             echo "::warning::No reports were generated"
           fi
 
