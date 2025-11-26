@@ -412,7 +412,7 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
             start_id = max(start_id, head.id)
             if arguments.verbose:
                 print_time_message(arguments, head.feed_title + ": " + head.title)
-            if (not head.is_updated) and (str(head.feed_id) not in ignore_list):
+            if str(head.feed_id) not in ignore_list:
                 is_duplicate = False
 
                 # Check URL-based duplication first
