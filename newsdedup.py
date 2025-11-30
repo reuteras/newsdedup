@@ -101,6 +101,9 @@ def init_url_queue(config):
 
 def normalize_url(url):
     """Normalize URL by removing tracking parameters and fragments."""
+    # Normalize protocol: convert http:// to https://
+    url = url.replace("http://", "https://")
+
     # Remove common tracking parameters
     tracking_params = [
         "utm_source",
