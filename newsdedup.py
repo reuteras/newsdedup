@@ -374,8 +374,19 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
     """
     newsdedup_config = configuration.get("newsdedup", {})
 
-    ignore_list = newsdedup_config.get("ignore", "").split(",")
-    nostar_list = newsdedup_config.get("nostar", "").split(",")
+    # Handle both string (comma-separated) and list formats
+    ignore_raw = newsdedup_config.get("ignore", "")
+    if isinstance(ignore_raw, list):
+        ignore_list = [str(x) for x in ignore_raw]
+    else:
+        ignore_list = ignore_raw.split(",")
+
+    nostar_raw = newsdedup_config.get("nostar", "")
+    if isinstance(nostar_raw, list):
+        nostar_list = [str(x) for x in nostar_raw]
+    else:
+        nostar_list = nostar_raw.split(",")
+
     ratio = int(newsdedup_config.get("ratio", 80))
     sleeptime = int(newsdedup_config.get("sleep", 60))
 
