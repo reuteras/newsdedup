@@ -8,20 +8,15 @@ from newsdedup import init_backend, read_configuration
 
 def main():
     """Main function."""
-    configuration = read_configuration("newsdedup.cfg")
+    configuration = read_configuration("newsdedup.toml")
     rss_api = init_backend(configuration)
 
     try:
         for category in rss_api.get_categories():
-            # For TTRSS, use cat_id parameter
-            if hasattr(rss_api, "client"):
-                for feed in rss_api.get_feeds(cat_id=category.id):
+            # Filter feeds by category
+            for feed in rss_api.get_feeds():
+                if feed.category_id == category.id:
                     print(feed.id, feed.title)
-            # For Miniflux, filter feeds by category manually
-            else:
-                for feed in rss_api.get_feeds():
-                    if feed.category_id == category.id:
-                        print(feed.id, feed.title)
     except Exception as error:  # pylint: disable=broad-except
         print(f"Error listing feeds: {error}")
         # Fallback: just list all feeds without category filtering

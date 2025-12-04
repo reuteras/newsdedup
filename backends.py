@@ -57,6 +57,9 @@ class MinifluxBackend:
         elif view_mode == "all_articles":
             # Use tuple for repeatable query parameters (status=read&status=unread)
             kwargs["status"] = ("read", "unread")
+        elif view_mode == "starred":
+            # Get starred/bookmarked articles (available since Miniflux 2.0.9)
+            kwargs["starred"] = True
 
         if since_id:
             kwargs["after_entry_id"] = since_id

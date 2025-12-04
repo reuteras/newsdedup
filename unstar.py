@@ -61,7 +61,7 @@ def unstar_unread(rss_api, args, configuration):
 
     shortenapi = select_shortenapi(args, configuration)
 
-    headlines = rss_api.get_headlines(feed_id=-1, view_mode="all_articles", show_excerpt=False)
+    headlines = rss_api.get_headlines(view_mode="starred", show_excerpt=False)
     while headlines:
         listed = 0
         read_list = []
@@ -86,7 +86,7 @@ def unstar_unread(rss_api, args, configuration):
                 read_list = []
                 if unstar == "q":
                     sys.exit()
-        headlines = rss_api.get_headlines(feed_id=-1, view_mode="all_articles", show_excerpt=False)
+        headlines = rss_api.get_headlines(view_mode="starred", show_excerpt=False)
 
 
 def main():
@@ -99,8 +99,8 @@ def main():
     )
     parser.add_argument(
         "configFile",
-        metavar="newsdedup.cfg",
-        default="newsdedup.cfg",
+        metavar="newsdedup.toml",
+        default="newsdedup.toml",
         nargs="?",
         help="Specify configuration file.",
     )
