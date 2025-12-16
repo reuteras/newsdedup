@@ -30,7 +30,7 @@ jobs:
       - name: Run OWASP Dependency-Check
         id: dependency-check
         continue-on-error: true
-        uses: dependency-check/Dependency-Check_Action@2ba636726705b0f74f126ebeaacaf2ad4600b967 # main as of 2025-11-21
+        uses: dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c # main as of 2025-11-21
         env:
           JAVA_HOME: /opt/jdk
         with:
