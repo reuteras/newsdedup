@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 # Set the Job #
 jobs:
