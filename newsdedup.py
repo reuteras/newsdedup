@@ -260,6 +260,8 @@ def compare_to_queue(
     similarity_method="token_sort",
     internal_only_feeds=None,
     feed_id=None,
+    self_dedup_feeds=None,
+    feed_seen_articles=None,
 ):
     """Compare current title to all in queue.
 
@@ -271,10 +273,35 @@ def compare_to_queue(
         similarity_method: Method for similarity calculation
         internal_only_feeds: Set of feed IDs that should only compare internally
         feed_id: Current article's feed ID
+        self_dedup_feeds: Set of feed IDs that should self-deduplicate
+        feed_seen_articles: Dictionary tracking articles per feed
     """
     if internal_only_feeds is None:
         internal_only_feeds = set()
+    if self_dedup_feeds is None:
+        self_dedup_feeds = set()
+    if feed_seen_articles is None:
+        feed_seen_articles = {}
 
+    # Check self-dedup feeds for intra-feed title duplicates FIRST
+    if feed_id in self_dedup_feeds:
+        if feed_id not in feed_seen_articles:
+            feed_seen_articles[feed_id] = set()
+
+        # Check if we've seen a similar title in this specific feed before
+        for _, seen_title in feed_seen_articles[feed_id]:
+            similarity = calculate_similarity(seen_title, head.title, similarity_method)
+            if similarity > ratio:
+                if arguments.verbose:
+                    print_time_message(arguments, "### SELF-DEDUP Old title: " + seen_title)
+                    print_time_message(arguments, "### SELF-DEDUP New: " + head.feed_title + ": " + head.title)
+                    print_time_message(
+                        arguments,
+                        f"### SELF-DEDUP Ratio: {similarity} (method: {similarity_method})",
+                    )
+                return similarity
+
+    # Continue with normal cross-feed title comparison
     for item in queue:
         # If current feed is internal-only, skip articles from other feeds
         if feed_id in internal_only_feeds and item.feed_id != feed_id:
@@ -293,7 +320,15 @@ def compare_to_queue(
     return 0
 
 
-def check_url_duplicate(url_queue, head, arguments, internal_only_feeds=None, feed_id=None):
+def check_url_duplicate(
+    url_queue,
+    head,
+    arguments,
+    internal_only_feeds=None,
+    feed_id=None,
+    self_dedup_feeds=None,
+    feed_seen_articles=None,
+):
     """Check if URL is already seen (duplicate).
 
     Args:
@@ -302,15 +337,37 @@ def check_url_duplicate(url_queue, head, arguments, internal_only_feeds=None, fe
         arguments: Command line arguments
         internal_only_feeds: Set of feed IDs that should only compare internally
         feed_id: Current article's feed ID
+        self_dedup_feeds: Set of feed IDs that should self-deduplicate
+        feed_seen_articles: Dictionary tracking articles per feed
     """
     if not hasattr(head, "link") or not head.link:
         return False
 
     if internal_only_feeds is None:
         internal_only_feeds = set()
+    if self_dedup_feeds is None:
+        self_dedup_feeds = set()
+    if feed_seen_articles is None:
+        feed_seen_articles = {}
 
     normalized_url = normalize_url(head.link)
 
+    # Check self-dedup feeds for intra-feed URL duplicates FIRST
+    if feed_id in self_dedup_feeds:
+        if feed_id not in feed_seen_articles:
+            feed_seen_articles[feed_id] = set()
+
+        # Check if we've seen this URL in this specific feed before
+        for seen_url, _ in feed_seen_articles[feed_id]:
+            if normalized_url == seen_url:
+                if arguments.verbose:
+                    print_time_message(
+                        arguments, f"### SELF-DEDUP URL found: {head.feed_title}: {head.title}"
+                    )
+                    print_time_message(arguments, f"### URL: {normalized_url}")
+                return True
+
+    # Continue with normal cross-feed URL check
     for item in url_queue:
         # If current feed is internal-only, skip articles from other feeds
         if feed_id in internal_only_feeds and item.feed_id != feed_id:
@@ -401,6 +458,13 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
     internal_only_list = feeds_config.get("internal_only", [])
     internal_only_feeds = set(internal_only_list) if internal_only_list else set()
 
+    # Get feeds that should self-deduplicate
+    self_dedup_list = feeds_config.get("self_dedup", [])
+    self_dedup_feeds = set(self_dedup_list) if self_dedup_list else set()
+
+    # Track articles seen per feed for self-deduplication
+    feed_seen_articles = {}  # {feed_id: set((url, title), ...)}
+
     headlines = []
 
     # Use saved state if available, otherwise get latest
@@ -431,7 +495,13 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
 
                 # Check URL-based duplication first
                 if check_urls and check_url_duplicate(
-                    title_queue, head, arguments, internal_only_feeds, head.feed_id
+                    title_queue,
+                    head,
+                    arguments,
+                    internal_only_feeds,
+                    head.feed_id,
+                    self_dedup_feeds,
+                    feed_seen_articles,
                 ):
                     is_duplicate = True
 
@@ -446,6 +516,8 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
                         similarity_method,
                         internal_only_feeds,
                         head.feed_id,
+                        self_dedup_feeds,
+                        feed_seen_articles,
                     )
                     > 0
                 ):
@@ -463,6 +535,13 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
                     feed_id=head.feed_id,
                 )
             )
+
+            # Track this article for self-dedup feeds
+            if head.feed_id in self_dedup_feeds:
+                if head.feed_id not in feed_seen_articles:
+                    feed_seen_articles[head.feed_id] = set()
+                normalized_url = normalize_url(head.link) if hasattr(head, "link") and head.link else ""
+                feed_seen_articles[head.feed_id].add((normalized_url, head.title))
 
         if arguments.dry_run:
             print_time_message(arguments, f"Total duplicates found: {duplicate_count}")

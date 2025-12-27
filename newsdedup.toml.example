@@ -61,3 +61,11 @@ nostar = ""
 # Use this for feeds that have similar content but shouldn't be deduped cross-feed
 # Example: internal_only = [123, 456]
 internal_only = []
+
+# Feed IDs that should deduplicate within themselves
+# Articles from these feeds are checked for duplicates within the same feed,
+# preventing the same article from appearing twice in that feed.
+# These articles WILL still participate in cross-feed deduplication.
+# Use this when a feed publishes the same article multiple times.
+# Example: self_dedup = [789]
+self_dedup = []
