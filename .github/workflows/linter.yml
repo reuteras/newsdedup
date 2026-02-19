@@ -28,16 +28,6 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Prepare Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      - name: Install dependencies
-        run: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-          uv sync --all-extras
 
       # Run Linter against code base #
       - name: Lint Code Base
