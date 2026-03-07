@@ -1,0 +1,44 @@
+---
+# From https://google.github.io/osv-scanner/github-action/
+name: OSV-Scanner Vulnerability Scan
+
+on:
+  # Change "main" to your default branch if you use a different name
+  # i.e. "master"
+  push:
+    branches: [main]
+    paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'fuzz/**'
+      - '.github/workflows/osv-scanner.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'fuzz/**'
+      - '.github/workflows/osv-scanner.yml'
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch: { }
+
+permissions:
+  contents: read
+
+jobs:
+  scan-scheduled:
+    permissions:
+      # REQUIRED: Read workflow metadata for reusable workflow
+      actions: read
+      # REQUIRED: Write SARIF results to Security tab
+      # Scoped to this job only (not workflow-level)
+      # See: https://github.com/github/codeql-action/issues/2117
+      security-events: write
+      # REQUIRED: Read repository files for scanning
+      contents: read
+      # EXPLICITLY DENIED: No pull request or issue access needed
+      pull-requests: none  # Minimal permissions - no PR access needed
+      issues: none  # Minimal permissions - no issues access needed
+    # v2.2.3
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@c5996e0193a3df57d695c1b8a1dec2a4c62e8730

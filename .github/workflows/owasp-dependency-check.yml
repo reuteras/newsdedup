@@ -21,7 +21,7 @@ jobs:
     steps:
       # Checkout the code base
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -63,7 +63,7 @@ jobs:
 
       # Upload results as artifacts
       - name: Upload Dependency-Check Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: steps.check-reports.outputs.reports_exist == 'true'
         with:
           name: dependency-check-report
@@ -71,7 +71,7 @@ jobs:
 
       # Upload SARIF file to GitHub Security tab
       - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
         if: steps.check-reports.outputs.sarif_exists == 'true'
         with:
           sarif_file: reports/dependency-check-report.sarif
