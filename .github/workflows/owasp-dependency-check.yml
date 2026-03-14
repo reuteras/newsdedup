@@ -71,7 +71,7 @@ jobs:
 
       # Upload SARIF file to GitHub Security tab
       - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        uses: github/codeql-action/upload-sarif@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
         if: steps.check-reports.outputs.sarif_exists == 'true'
         with:
           sarif_file: reports/dependency-check-report.sarif
