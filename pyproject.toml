@@ -1,6 +1,6 @@
 [project]
 name = "newsdedup"
-version = "1.0.0"
+version = "1.0.1"
 description = "A project to deduplicate news feed articles"
 authors = [
     {name = "PR", email = "code@reuteras.se"}
