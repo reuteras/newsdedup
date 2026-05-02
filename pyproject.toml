@@ -17,7 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "bandit>=1.7.7",
-    "ruff>=0.15.11",
+    "ruff>=0.15.12",
 ]
 
 [project.scripts]
