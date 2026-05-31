@@ -8,10 +8,10 @@ import logging
 import re
 import sys
 import time
-import tomllib
 from collections import deque
 from pathlib import Path
 
+import tomllib
 from fuzzywuzzy import fuzz
 
 from backends import create_backend
@@ -294,7 +294,9 @@ def compare_to_queue(
             if similarity > ratio:
                 if arguments.verbose:
                     print_time_message(arguments, "### SELF-DEDUP Old title: " + seen_title)
-                    print_time_message(arguments, "### SELF-DEDUP New: " + head.feed_title + ": " + head.title)
+                    print_time_message(
+                        arguments, "### SELF-DEDUP New: " + head.feed_title + ": " + head.title
+                    )
                     print_time_message(
                         arguments,
                         f"### SELF-DEDUP Ratio: {similarity} (method: {similarity_method})",
@@ -540,7 +542,9 @@ def monitor_rss(rss, title_queue, url_queue, arguments, configuration, saved_sta
             if head.feed_id in self_dedup_feeds:
                 if head.feed_id not in feed_seen_articles:
                     feed_seen_articles[head.feed_id] = set()
-                normalized_url = normalize_url(head.link) if hasattr(head, "link") and head.link else ""
+                normalized_url = (
+                    normalize_url(head.link) if hasattr(head, "link") and head.link else ""
+                )
                 feed_seen_articles[head.feed_id].add((normalized_url, head.title))
 
         if arguments.dry_run:
