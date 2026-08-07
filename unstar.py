@@ -4,62 +4,27 @@
 # Copyright (C) 2015-2023 PR <code@reuteras.se>
 
 import argparse
-import contextlib
 import logging
 import operator
 import re
 import sys
 
-import requests
-
 import newsdedup
 
 
-def select_shortenapi(args, configuration):
-    """Select service for shortend url:s"""
-    if args.bitly:
-        try:
-            shortenapi = configuration.get("bitly", "apikey")
-        except Exception:  # pylint: disable=broad-except
-            print("Error importing and setting up Bitly API.")
-    else:
-        shortenapi = None
-    return shortenapi
-
-
-def bitly_shorten(link, shortenapi):
-    """Call bitly API directly."""
-    headers = {
-        "Authorization": "Bearer " + shortenapi,
-        "Content-Type": "application/json",
-    }
-
-    data = '{ "long_url": "' + link + '", "domain": "bit.ly" }'
-
-    return requests.post(
-        "https://api-ssl.bitly.com/v4/shorten", headers=headers, data=data, timeout=30
-    ).json()["link"]
-
-
-def shorten_url(args, head, shortenapi):
+def shorten_url(args, head):
     """Shorten a url."""
     link = head.link
 
     if args.notrack:
         link = re.sub(r"\?(utm|at_me).*$", "", link)
 
-    if args.bitly:
-        with contextlib.suppress(Exception):
-            link = bitly_shorten(head.link, shortenapi)
-
     return link
 
 
-def unstar_unread(rss_api, args, configuration):
+def unstar_unread(rss_api, args):
     """Unstar messages"""
     limit = args.limit if isinstance(args.limit, int) else args.limit[0]
-
-    shortenapi = select_shortenapi(args, configuration)
 
     headlines = rss_api.get_headlines(view_mode="starred", show_excerpt=False)
     while headlines:
@@ -67,12 +32,9 @@ def unstar_unread(rss_api, args, configuration):
         read_list = []
         headlines_sorted = sorted(headlines, key=operator.attrgetter("feed_id"))
         for head in headlines_sorted:
-            link = shorten_url(args, head, shortenapi)
+            link = shorten_url(args, head)
 
-            if args.bitly:
-                feed_title = re.sub(r"(:| - | - | \(.*\)).*", "", head.feed_title)
-            else:
-                feed_title = head.feed_title
+            feed_title = head.feed_title
             message = str(head.feed_id) + ": " + feed_title + ": " + head.title + ": " + link
             read_list.append(head.id)
             print(message)
@@ -107,7 +69,6 @@ def main():
     parser.add_argument(
         "-q", "--quiet", action="store_true", help="Quiet, i.e. catch SSL warnings."
     )
-    parser.add_argument("-b", "--bitly", action="store_true", help="Shorten urls using Bitly.")
     parser.add_argument(
         "-n",
         "--notrack",
@@ -129,7 +90,7 @@ def main():
         logging.captureWarnings(True)
     configuration = newsdedup.read_configuration(args.configFile)
     rss_api = newsdedup.init_backend(configuration)
-    unstar_unread(rss_api, args, configuration)
+    unstar_unread(rss_api, args)
 
 
 # Run main function
