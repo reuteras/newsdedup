@@ -3,7 +3,6 @@
 [![Lint Code Base v4](https://github.com/reuteras/newsdedup/actions/workflows/linter.yml/badge.svg)](https://github.com/reuteras/newsdedup/actions/workflows/linter.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-
 A project to deduplicate my news feed.
 
 For a long time I've added a lot of RSS feeds and now I've ended up with a lot
@@ -33,6 +32,7 @@ Create a `newsdedup.toml` file in your project directory. Use `newsdedup.toml.ex
     # Edit newsdedup.toml with your Miniflux settings
 
 For **Miniflux**:
+
 1. Generate an API token in Miniflux Settings > API Keys
 2. Add to your `newsdedup.toml`:
 
@@ -91,17 +91,17 @@ newsdedup is designed for [Miniflux](https://miniflux.app/) - a modern, minimali
 
 The duplicate detection has been significantly improved with:
 
-1.  **Multiple Similarity Algorithms**:
-    -   `token_sort` - Token-based sorting comparison (original)
-    -   `token_set` - Set-based token comparison
-    -   `partial` - Partial string matching
-    -   `jaccard` - Jaccard similarity coefficient
-    -   `combined` - Uses the best result from multiple methods (recommended)
+1. **Multiple Similarity Algorithms**:
+    - `token_sort` - Token-based sorting comparison (original)
+    - `token_set` - Set-based token comparison
+    - `partial` - Partial string matching
+    - `jaccard` - Jaccard similarity coefficient
+    - `combined` - Uses the best result from multiple methods (recommended)
 
-2.  **URL-based Deduplication**:
-    -   Detects duplicate articles by normalized URLs
-    -   Removes tracking parameters automatically
-    -   Can be disabled in configuration
+2. **URL-based Deduplication**:
+    - Detects duplicate articles by normalized URLs
+    - Removes tracking parameters automatically
+    - Can be disabled in configuration
 
 Configure in `newsdedup.toml`:
 
@@ -117,8 +117,8 @@ Configure in `newsdedup.toml`:
 
 Relevant APIs and libraries used in this project:
 
-* [Miniflux - Official Documentation](https://miniflux.app/)
-* [Miniflux - API Reference](https://miniflux.app/docs/api.html)
-* [miniflux-python - Python Client Library](https://github.com/miniflux/python-client)
-* [RapidFuzz - Fuzzy String Matching](https://github.com/rapidfuzz/RapidFuzz)
-* [uv - Python Package Manager](https://docs.astral.sh/uv/)
+- [Miniflux - Official Documentation](https://miniflux.app/)
+- [Miniflux - API Reference](https://miniflux.app/docs/api.html)
+- [miniflux-python - Python Client Library](https://github.com/miniflux/python-client)
+- [RapidFuzz - Fuzzy String Matching](https://github.com/rapidfuzz/RapidFuzz)
+- [uv - Python Package Manager](https://docs.astral.sh/uv/)
