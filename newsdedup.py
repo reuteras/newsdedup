@@ -12,7 +12,7 @@ from collections import deque
 from pathlib import Path
 
 import tomllib
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 
 from backends import create_backend
 

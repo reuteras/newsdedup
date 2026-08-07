@@ -120,5 +120,5 @@ Relevant APIs and libraries used in this project:
 * [Miniflux - Official Documentation](https://miniflux.app/)
 * [Miniflux - API Reference](https://miniflux.app/docs/api.html)
 * [miniflux-python - Python Client Library](https://github.com/miniflux/python-client)
-* [fuzzywuzzy - Fuzzy String Matching](https://github.com/seatgeek/fuzzywuzzy)
+* [RapidFuzz - Fuzzy String Matching](https://github.com/rapidfuzz/RapidFuzz)
 * [uv - Python Package Manager](https://docs.astral.sh/uv/)
