@@ -8,6 +8,7 @@ import logging
 import re
 import sys
 import time
+import traceback
 from collections import deque
 from pathlib import Path
 
@@ -58,8 +59,7 @@ def load_state(state_file=".newsdedup_state"):
     if state_path.exists():
         try:
             with open(state_path) as f:
-                last_id = int(f.read().strip())
-                return last_id
+                return int(f.read().strip())
         except Exception:  # pylint: disable=broad-except
             pass
     return 0
@@ -600,8 +600,6 @@ def run(rss_api, title_queue, url_queue, args, configuration):
         except Exception as error:  # pylint: disable=broad-except
             print_time_message(args, f"Error in monitor_rss: {type(error).__name__}: {error}")
             if args.debug:
-                import traceback
-
                 print_time_message(args, "Debug: Full traceback:")
                 traceback.print_exc()
 

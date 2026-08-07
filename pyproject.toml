@@ -41,10 +41,14 @@ ignore = [
     "BLE001",  # Blind exception catches (intentional for robustness)
     "C901",    # Function complexity (main functions are intentionally complex)
     "PERF203", # try-except in loop (intentional for main loop error handling)
+    "PLR0912", # Too many branches (same rationale as C901)
+    "PLR0913", # Too many arguments (dedup functions share a wide, explicit context)
+    "PLR0915", # Too many statements (same rationale as C901)
+    "PLR0917", # Too many positional arguments (same rationale as PLR0913)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["PLR0913", "PLR0917", "PLR2004"]
+"tests/*.py" = ["PLR2004"]
 
 [tool.ruff.format]
 quote-style = "double"
