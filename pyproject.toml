@@ -15,7 +15,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "bandit>=1.7.7",
     "pytest>=8.3.4",
     "ruff>=0.16.1",
 ]
