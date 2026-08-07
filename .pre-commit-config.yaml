@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 39d9ac5938dadb73df0564a45f163e25ff9fa6e2 # v0.16.1
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        # Run inside the project's own uv-managed venv so mypy sees the
+        # exact dependency versions pinned in uv.lock instead of a
+        # separately resolved isolated environment.
+        entry: uv run --extra dev mypy .
+        language: system
+        pass_filenames: false
+        types: [python]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # v8.30.1
+    hooks:
+      - id: gitleaks
