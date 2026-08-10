@@ -17,10 +17,10 @@ repos:
         pass_filenames: false
         types: [python]
 
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # v8.30.1
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: 82b306a9d338121a6fd087002a94e5c7ab685355 # v1.7.3
     hooks:
-      - id: gitleaks
+      - id: betterleaks
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.49.1
