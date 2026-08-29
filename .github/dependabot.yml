@@ -1,17 +1,6 @@
 ---
 version: 2
 updates:
-  - package-ecosystem: "uv"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    cooldown:
-      default-days: 7
-    groups:
-      package-deps:
-        patterns:
-          - "*"
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -31,5 +20,16 @@ updates:
       default-days: 7
     groups:
       pre-commit-deps:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+    groups:
+      package-deps:
         patterns:
           - "*"
