@@ -2,24 +2,14 @@
 name = "newsdedup"
 version = "1.0.1"
 description = "A project to deduplicate news feed articles"
-authors = [
-    {name = "PR", email = "code@reuteras.se"}
-]
+authors = [{ name = "PR", email = "code@reuteras.se" }]
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 requires-python = ">=3.11"
-dependencies = [
-    "rapidfuzz>=3.14.5",
-    "miniflux>=0.0.30",
-]
+dependencies = ["rapidfuzz>=3.14.5", "miniflux>=0.0.30"]
 
 [project.optional-dependencies]
-dev = [
-    "mypy>=1.14.0",
-    "pre-commit>=4.6.2",
-    "pytest>=8.3.4",
-    "ruff>=0.16.2",
-]
+dev = ["mypy>=1.14.0", "pytest>=8.3.4", "ruff>=0.16.2"]
 
 [project.scripts]
 newsdedup = "newsdedup:main"
@@ -35,7 +25,21 @@ line-length = 100
 target-version = "py38"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PIE", "RET", "SIM", "PL"]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "A",
+    "C4",
+    "PIE",
+    "RET",
+    "SIM",
+    "PL",
+]
 ignore = [
     "E501",    # Line too long (handled by formatter)
     "T201",    # Print statements (intentional for CLI)
