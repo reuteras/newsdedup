@@ -8,11 +8,11 @@ import logging
 import re
 import sys
 import time
+import tomllib
 import traceback
 from collections import deque
 from pathlib import Path
 
-import tomllib
 from rapidfuzz import fuzz
 
 from backends import create_backend

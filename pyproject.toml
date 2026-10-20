@@ -22,7 +22,7 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [
