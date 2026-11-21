@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: c0f278f1254ccc8fb09676bcdb8d847e7db493e5 # v0.17.4
+    rev: ef6cf06c079dd6b299dfc720b0f14400c9d168e1 # v0.17.5
     hooks:
       - id: ruff-check
       - id: ruff-format
@@ -18,7 +18,7 @@ repos:
         types: [python]
 
   - repo: https://github.com/betterleaks/betterleaks
-    rev: 8d77e1712fb06fd14444cc648686f1d5655e28a8 # v1.10.0
+    rev: 39d5bdcf34db54e944facac5cf6e8b03db5e2b99 # v1.10.1
     hooks:
       - id: betterleaks
 
