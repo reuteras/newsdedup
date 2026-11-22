@@ -459,7 +459,7 @@ dependencies = [
     { name = "rapidfuzz" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
@@ -469,12 +469,15 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "miniflux", specifier = ">=0.0.30" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.14.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.4" },
     { name = "rapidfuzz", specifier = ">=3.14.5" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.16.2" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.14.0" },
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "ruff", specifier = ">=0.17.5" },
+]
 
 [[package]]
 name = "packaging"
